@@ -2,7 +2,10 @@
   "name": "jslox",
   "version": "0.0.1",
   "description": "Bob Nystrom's Lox Language from Crafting Interpreters written in JavaScript",
-  "main": "main.js",
+  "main": "bin/main.js",
+  "bin": {
+    "jslox": "./bin/main.js"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
