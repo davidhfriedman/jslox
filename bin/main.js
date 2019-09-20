@@ -4,6 +4,9 @@ const fs = require('fs')
 const readline = require('readline')
 const { TokenType, Token } = require('./token')
 const Scanner = require('./scanner')
+const Parser = require('./parser')
+// TODO: name pprint
+const { pprint } = require('./ast')
 let { hadError } = require('./errors')
 
 hadError = false
@@ -20,6 +23,7 @@ function main() {
   return 0
 }
 
+// TODO these are in errors.js now
 function error(line, message) {                       
   report(line, "", message)
 }
@@ -33,8 +37,13 @@ function run(source) {
   hadError = false
   const scanner = new Scanner(source)
   const tokens = scanner.scanTokens()
-  // For now, just print the tokens.        
-  tokens.forEach(token => console.log(`<${token}>`))
+  // TODO Chapter 3 test: just print the tokens.        
+  // tokens.forEach(token => console.log(`<${token}>`))
+  const parser = new Parser(tokens)
+  const expression = parser.parse()
+  // stop on synax errors
+  if (hadError) { return }
+  console.log(pprint(expression))
 }
 
 function runFile(path) {

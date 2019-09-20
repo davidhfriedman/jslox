@@ -46,13 +46,6 @@ function pprint(e) {
   return e.accept(PPrintVisitor)
 }
 
-const expression =
-      new Binary(
-	new Unary(
-	  new Token(TokenType.MINUS, "-", undefined, 1),
-	  new Literal(123)),
-	new Token(TokenType.STAR, "*", undefined, 1),
-	new Grouping(
-	  new Literal(45.67)))
+// TODO: name pprint
+module.exports = { Literal, Grouping, Unary, Binary, pprint }
 
-console.log(pprint(expression))

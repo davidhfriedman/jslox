@@ -1,8 +1,8 @@
 let hadError = false
 
-function error(line, text) {
+function report(line, text) {
   hadError = true
   console.log(`Error: ${line}, ${text}`)
 }
 
-module.exports = { error, hadError }
+module.exports = { report, hadError }

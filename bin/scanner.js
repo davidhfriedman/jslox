@@ -1,5 +1,5 @@
 const { TokenType, Token } = require('./token')
-const { error } = require('./errors')
+const { report } = require('./errors')
 
 function Scanner(source) {
   this.source = source
@@ -69,7 +69,7 @@ Scanner.prototype.string = function () {
     this.advance()
   }
   if (this.atEnd()) {
-    error(this.line, "Unterminated string.")
+    report(this.line, "Unterminated string.")
     return
   }
   this.advance() // the closing '"'
@@ -150,7 +150,7 @@ Scanner.prototype.scanToken = function () {
     } else if (this.isAlpha(c)) {
       this.identifier()
     } else {
-      error(line, `Unexpected character ${c}.`)
+      report(line, `Unexpected character ${c}.`)
     }
     break
   }
