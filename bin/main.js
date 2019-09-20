@@ -7,6 +7,7 @@ const Scanner = require('./scanner')
 const Parser = require('./parser')
 // TODO: name pprint
 const { pprint } = require('./ast')
+const { interpret } = require('./interpreter')
 let { hadError } = require('./errors')
 
 hadError = false
@@ -44,6 +45,7 @@ function run(source) {
   // stop on synax errors
   if (hadError) { return }
   console.log(pprint(expression))
+  console.log(interpret(expression))
 }
 
 function runFile(path) {
