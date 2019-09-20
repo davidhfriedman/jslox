@@ -44,7 +44,7 @@ function run(source) {
   const expression = parser.parse()
   // stop on synax errors
   if (hadError) { return }
-  console.log(pprint(expression))
+  // TODO TESTING console.log(pprint(expression))
   console.log(interpret(expression))
 }
 

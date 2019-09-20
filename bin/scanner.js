@@ -150,7 +150,7 @@ Scanner.prototype.scanToken = function () {
     } else if (this.isAlpha(c)) {
       this.identifier()
     } else {
-      report(line, `Unexpected character ${c}.`)
+      report(this.line, `Unexpected character ${c}.`)
     }
     break
   }
