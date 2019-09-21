@@ -41,11 +41,18 @@ function run(source) {
   // TODO Chapter 3 test: just print the tokens.        
   // tokens.forEach(token => console.log(`<${token}>`))
   const parser = new Parser(tokens)
-  const expression = parser.parse()
-  // stop on synax errors
-  if (hadError) { return }
-  // TODO TESTING console.log(pprint(expression))
-  console.log(interpret(expression))
+  while (!parser.atEnd()) {
+    const expression = parser.parse()
+    // stop on synax errors
+    if (hadError) { return }
+    try {
+      const result = interpret(expression)
+      console.log(`DBG ${pprint(expression)} => ${result}`)
+    } catch (e) {
+      console.log(e.name, ':', e.message)
+      console.log(source)
+    }
+  }
 }
 
 function runFile(path) {

@@ -22,6 +22,13 @@ class InterpreterError extends Error {
   }
 }
 
+class TypeError extends Error {
+  constructor({operator, operand, expected, message = ''}) {
+    super(`Type error at line ${operator.line}: '${operator.lexeme}' expects ${expected} got '${operand}' ${message}`)
+    this.name = "TypeError"
+  }
+}
+
 function isTruthy (e) {
   // The Ruby way: false and nil are falsey all else truthy
   if (e === null || e === undefined) { return false }
@@ -34,13 +41,40 @@ function areEqual(a, b) {
   return a == b
 }
 
+function typeCheckNumber(operator, operand) {
+  if (typeof operand === "number") { return }
+  throw new TypeError({ operator: operator, operand: operand, expected: 'number' })
+}
+
+function typeCheckNumbers(operator, left, right) {
+  if (typeof left === "number" && typeof right === "number" ) { return }
+  const operand = (typeof left === "number") ? right : left
+  throw new TypeError({ operator: operator, operand: operand, expected: 'number' })
+}
+
+function typeCheckNumbersOrStrings(operator, left, right) {
+  if (typeof left === "number") {
+    if (typeof right === "number" ) {
+      return
+    } else {
+      throw new TypeError({ operator: operator, operand: right, expected: 'number' })
+    }
+  } else if (typeof left === "string") {
+    if (typeof right === "string" ) {
+      return
+    } else {
+      throw new TypeError({ operator: operator, operand: right, expected: 'string' })
+    }
+  }
+}
+
 const InterpreterVisitor = {
   visitLiteral: function (l) { return l.val },
   visitGrouping: function (g) { return g.expr.accept(this) },
   visitUnary: function (u) {
     let e = u.expr.accept(this)
     if (u.operator.type === TokenType.MINUS) {
-      // TODO: type check
+      typeCheckNumber(u.operator, e)
       e = -e
     } else if (u.operator.type === TokenType.BANG) {
       e = !isTruthy(e)
@@ -67,27 +101,35 @@ const InterpreterVisitor = {
       e = !areEqual(left, right)
       break
     case TokenType.LESS:
+      typeCheckNumbers(b.operator, left, right)
       e = (left < right)
       break
     case TokenType.LESS_EQUAL:
+      typeCheckNumbers(b.operator, left, right)
       e = (left <= right)
       break
     case TokenType.GREATER:
+      typeCheckNumbers(b.operator, left, right)
       e = (left > right)
       break
     case TokenType.GREATER_EQUAL:
+      typeCheckNumbers(b.operator, left, right)
       e = (left >= right)
       break
     case TokenType.PLUS:
+      typeCheckNumbersOrStrings(b.operator, left, right)
       e = (left + right)
       break
     case TokenType.MINUS:
+      typeCheckNumbers(b.operator, left, right)
       e = (left - right)
       break
     case TokenType.STAR:
+      typeCheckNumbers(b.operator, left, right)
       e = (left * right)
       break
     case TokenType.SLASH:
+      typeCheckNumbers(b.operator, left, right)
       e = (left / right)
       break
     default:
