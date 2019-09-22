@@ -11,6 +11,7 @@ const { interpret } = require('./interpreter')
 let { hadError } = require('./errors')
 
 hadError = false
+// TODO hadRuntimeError = false
 
 function main() {
   if (process.argv.length > 3) {
@@ -60,6 +61,11 @@ function runFile(path) {
   if (hadError) {
     process.exit(65)
   }
+  /* TODO 
+     if (hadRuntimeError) {
+     process.exit(70)
+     }
+  */
 }
 
 function runPrompt() { 
