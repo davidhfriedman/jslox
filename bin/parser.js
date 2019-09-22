@@ -1,4 +1,12 @@
 /*
+program   → statement* EOF ;
+
+statement → exprStmt
+          | printStmt ;
+
+exprStmt  → expression ";" ;
+printStmt → "print" expression ";" ;
+
 expression     → equality ;
 equality       → comparison ( ( "!=" | "==" ) comparison )* ;
 comparison     → addition ( ( ">" | ">=" | "<" | "<=" ) addition )* ;
@@ -11,7 +19,7 @@ primary        → NUMBER | STRING | "false" | "true" | "nil"
 */
 
 const { TokenType, Token } = require('./token')
-const { Literal, Grouping, Unary, Binary } = require('./ast')
+const { Program, PrintStatement, ExpressionStatement, Literal, Grouping, Unary, Binary } = require('./ast')
 const { report } = require('./errors')
 
 function Parser(tokens) {
@@ -93,6 +101,34 @@ Parser.prototype.match = function (...types) {
   return false
 }
 
+Parser.prototype.program = function () {
+  let program = []
+  while (!this.atEnd()) {
+    program.push(this.statement())
+  }
+  return new Program(program)
+}
+
+Parser.prototype.statement = function () {
+  if (this.match(TokenType.PRINT)) {
+    return this.printStatement()
+  } else {
+    return this.expressionStatement()
+  }
+}
+
+Parser.prototype.printStatement = function () {
+  let expr = this.expression()
+  this.consume(TokenType.SEMICOLON, "Expect ';' after print statement")
+  return new PrintStatement(expr)
+}
+
+Parser.prototype.expressionStatement = function () {
+  let expr = this.expression()
+  this.consume(TokenType.SEMICOLON, "Expect ';' after expression")
+  return new ExpressionStatement(expr)
+}
+
 Parser.prototype.expression = function () {
   return this.equality()
 }
@@ -168,7 +204,7 @@ Parser.prototype.primary = function () {
 
 Parser.prototype.parse = function () {
   try {
-    return this.expression()
+    return this.program()
   } catch (e) {
     console.log(`ERROR: `, e)
     return null

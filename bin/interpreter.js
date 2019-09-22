@@ -1,7 +1,15 @@
 const { TokenType, Token } = require('./token')
-const { Literal, Grouping, Unary, Binary } = require('./ast')
+const { pprint } = require('./ast')
 
 /*
+program   → statement* EOF ;
+
+statement → exprStmt
+          | printStmt ;
+
+exprStmt  → expression ";" ;
+printStmt → "print" expression ";" ;
+
 expression -> literal | unary | binary | grouping ;
 literal -> NUMBER | STRING | "true" | "false" | "nil" ;
 grouping -> "(" expression ")" ;
@@ -69,6 +77,18 @@ function typeCheckNumbersOrStrings(operator, left, right) {
 }
 
 const InterpreterVisitor = {
+  visitProgram: function (p) {
+    p.statements.forEach(s => s.accept(this))
+    return null
+  },
+  visitPrintStatement: function (s) {
+    let e = s.expr.accept(this)
+    return null
+  },
+  visitExpressionStatement: function (s) {
+    let e = s.expr.accept(this)
+    return null
+  },
   visitLiteral: function (l) { return l.val },
   visitGrouping: function (g) { return g.expr.accept(this) },
   visitUnary: function (u) {

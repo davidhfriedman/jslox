@@ -40,17 +40,19 @@ function run(source) {
   const scanner = new Scanner(source)
   const tokens = scanner.scanTokens()
   // TODO Chapter 3 test: just print the tokens.        
-  // tokens.forEach(token => console.log(`<${token}>`))
+  //console.log('DBG TOKENS:')
+  //tokens.forEach(token => console.log(`<${token}>`))
   const parser = new Parser(tokens)
   while (!parser.atEnd()) {
     const expression = parser.parse()
     // stop on synax errors
     if (hadError) { return }
     try {
+      //console.log(`DBG ${pprint(expression)}`)
       const result = interpret(expression)
-      console.log(`DBG ${pprint(expression)} => ${result}`)
+      //console.log(`DBG ${pprint(expression)} => ${result}`)
     } catch (e) {
-      console.log(e.name, ':', e.message)
+      console.log('in run() : ', e.name, ':', e.message)
       console.log(source)
     }
   }
