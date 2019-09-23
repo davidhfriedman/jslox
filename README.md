@@ -12,10 +12,10 @@ As of 2019-09-23 ```print <expression>;``` is the only thing that does anything.
 ### examples:
 
 ```
->print "Hello" + ", " + "world!"
+>print "Hello" + ", " + "world!";
 Hello, world!
 
->print 19 + 2 < 20
+>print 19 + 2 < 20;
 false
 ```
 
