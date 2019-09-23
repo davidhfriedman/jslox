@@ -1,26 +1,7 @@
-/*
-program   → statement* EOF ;
-
-statement → exprStmt
-          | printStmt ;
-
-exprStmt  → expression ";" ;
-printStmt → "print" expression ";" ;
-
-expression     → equality ;
-equality       → comparison ( ( "!=" | "==" ) comparison )* ;
-comparison     → addition ( ( ">" | ">=" | "<" | "<=" ) addition )* ;
-addition       → multiplication ( ( "-" | "+" ) multiplication )* ;
-multiplication → unary ( ( "/" | "*" ) unary )* ;
-unary          → ( "!" | "-" ) unary
-               | primary ;
-primary        → NUMBER | STRING | "false" | "true" | "nil"
-               | "(" expression ")" ;
-*/
-
 const { TokenType, Token } = require('./token')
-const { Program, PrintStatement, ExpressionStatement, Literal, Grouping, Unary, Binary } = require('./ast')
-const { report } = require('./errors')
+const { Program, Declaration, PrintStatement, ExpressionStatement,
+	Literal, Grouping, Unary, Binary } = require('./ast')
+const { report, hadError } = require('./errors')
 
 function Parser(tokens) {
   this.tokens = tokens
@@ -46,7 +27,7 @@ Parser.prototype.advance = function () {
 
 Parser.prototype.consume = function(type, message) {
   if (this.check(type)) { return this.advance() }
-  else { throw this.error(this.peek(), message) }
+  else { hadError(true); throw this.error(this.peek(), message) }
 }
 
 Parser.prototype.error = function(token, message) {
@@ -55,6 +36,7 @@ Parser.prototype.error = function(token, message) {
   } else {
     report(token.line, ` at '${token.lexeme}' ${message}`)
   }
+  hadError(true)
   return new ParseError(token, message)
 }
 
@@ -72,14 +54,14 @@ Parser.prototype.synchronize = function () {
   while (!this.atEnd()) {
     if (this.previous().type === TokenType.SEMICOLON) { return }
     switch (this.peek().type) {
-    case CLASS:
-    case FUN:
-    case VAR:
-    case FOR:
-    case IF:
-    case WHILE:
-    case PRINT:
-    case RETURN:
+    case TokenType.CLASS:
+    case TokenType.FUN:
+    case TokenType.VAR:
+    case TokenType.FOR:
+    case TokenType.IF:
+    case TokenType.WHILE:
+    case TokenType.PRINT:
+    case TokenType.RETURN:
       return
     }
     this.advance()
@@ -110,10 +92,24 @@ Parser.prototype.program = function () {
 }
 
 Parser.prototype.statement = function () {
-  if (this.match(TokenType.PRINT)) {
+  if (this.match(TokenType.VAR)) {
+    return this.declaration()
+  } else if (this.match(TokenType.PRINT)) {
     return this.printStatement()
   } else {
     return this.expressionStatement()
+  }
+}
+
+Parser.prototype.declaration = function () {
+  let name, value
+  if (this.match(TokenType.IDENTIFIER)) {
+    name = this.previous()
+    if (this.match(TokenType.EQUAL)) {
+      value = this.expression()
+    }
+    this.consume(TokenType.SEMICOLON, "Expect ';' after print statement")
+    return new Declaration(name, value)
   }
 }
 
@@ -199,6 +195,7 @@ Parser.prototype.primary = function () {
     this.consume(TokenType.RIGHT_PAREN, `Expect ')' after expression.`)
     return new Grouping(expr)
   }
+  hadError(true)
   throw this.error(this.peek(), "Expect expression.")
 }
 
@@ -206,8 +203,8 @@ Parser.prototype.parse = function () {
   try {
     return this.program()
   } catch (e) {
-    console.log(`ERROR: `, e)
-    return null
+    hadError(true)
+    return e
   }
 }
 

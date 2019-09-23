@@ -1,23 +1,6 @@
 const { TokenType, Token } = require('./token')
 const { pprint } = require('./ast')
 
-/*
-program   → statement* EOF ;
-
-statement → exprStmt
-          | printStmt ;
-
-exprStmt  → expression ";" ;
-printStmt → "print" expression ";" ;
-
-expression -> literal | unary | binary | grouping ;
-literal -> NUMBER | STRING | "true" | "false" | "nil" ;
-grouping -> "(" expression ")" ;
-unary -> ( "-" | "!" ) expression ;
-binary -> expression operator expression ;
-operator -> "==" | "!=" | "<" | "<=" | ">" | ">=" | "+" | "-" | "*" | "/" ;
-*/
-
 const error = function(token, message) {
   report(token.line, ` at '${token.lexeme}' ${message}`)
   return new InterpreterError(token, message)
@@ -78,11 +61,12 @@ function typeCheckNumbersOrStrings(operator, left, right) {
 
 const InterpreterVisitor = {
   visitProgram: function (p) {
-    p.statements.forEach(s => s.accept(this))
+    p.declarations.forEach(d => { d.accept(this) } )
     return null
   },
   visitPrintStatement: function (s) {
     let e = s.expr.accept(this)
+    console.log(e) // print e
     return null
   },
   visitExpressionStatement: function (s) {

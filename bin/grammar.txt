@@ -1,0 +1,28 @@
+program     → declaration* EOF ;
+
+declaration → declaration
+            | statement ;
+
+declaration → "var" IDENTIFIER ( "=" expression )? ";" ;
+
+statement   → exprStmt
+            | printStmt ;
+	    
+exprStmt  → expression ";" ;
+printStmt → "print" expression ";" ;
+
+/* condensed
+expression -> literal | unary | binary | grouping ;
+literal -> NUMBER | STRING | "true" | "false" | "nil" ;
+grouping -> "(" expression ")" ;
+unary -> ( "-" | "!" ) expression ;
+binary -> expression operator expression ;
+operator -> "==" | "!=" | "<" | "<=" | ">" | ">=" | "+" | "-" | "*" | "/" ;
+*/
+
+expression → comparison (( "!=" | "==" ) comparison) *
+comparison → addition (( "<" | "<=" | ">" | ">=" ) addition) *
+addition → multiplication (( "-" | "+" ) multiplication) *
+multiplication → unary (( "*" | "/" ) unary) *
+unary → (( "-" | "!" ) unary) | primary
+primary → "false" | "true" | "nil" | NUMBER | STRING | "(" expression ")" | IDENTIFIER

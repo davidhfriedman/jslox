@@ -1,26 +1,17 @@
 const { TokenType, Token } = require('./token')
-/*
-program   → statement* EOF ;
 
-statement → exprStmt
-          | printStmt ;
-
-exprStmt  → expression ";" ;
-printStmt → "print" expression ";" ;
-
-expression -> literal | unary | binary | grouping ;
-literal -> NUMBER | STRING | "true" | "false" | "nil" ;
-grouping -> "(" expression ")" ;
-unary -> ( "-" | "!" ) expression ;
-binary -> expression operator expression ;
-operator -> "==" | "!=" | "<" | "<=" | ">" | ">=" | "+" | "-" | "*" | "/" ;
-*/
-
-function Program(statements) {
-  this.statements = statements
+function Program(declarations) {
+  this.declarations = declarations
 }
 
 Program.prototype.accept = function (v) { return v.visitProgram(this) }
+
+function Declaration(name, val) {
+  this.name = name
+  this.val = val
+}
+
+Declaration.prototype.accept = function (v) { return v.visitDeclaration(this) }
 
 function PrintStatement(expr) {
   this.expr = expr
@@ -62,8 +53,10 @@ function Binary(left, operator, right) {
 Binary.prototype.accept = function (v) { return v.visitBinary(this) }
 
 const PPrintVisitor = {
-  visitProgram: function (p) { return `(program ${p.statements.map(s => s.expr.accept(this)).join(' ')})` },
-  visitStatement: function (s) { return `<SHTAT ${s}>` },
+  visitProgram: function (p) { return `(program ${p.declarations.map(d => d.expr.accept(this)).join(' ')})` },
+  visitDeclaration: function (d) { return `(decl ${d.name} ${d.val.accept(this)})` },
+  visitExpressionStatement: function (s) { return `(statement ${s.expr.accept(this)})` },
+  visitPrintStatement: function (s) { return `(print ${s.expr.accept(this)})` },
   visitLiteral: function (l) { return `${l.val ? l.val : 'nil'}` },
   visitGrouping: function (g) { return `(group ${g.expr.accept(this)})` },
   visitUnary: function (u) { return `(${u.operator.lexeme} ${u.expr.accept(this)})` },
@@ -75,5 +68,7 @@ function pprint(e) {
 }
 
 // TODO: name pprint
-module.exports = { Program, PrintStatement, ExpressionStatement, Literal, Grouping, Unary, Binary, pprint }
+module.exports = { Program, Declaration, PrintStatement, ExpressionStatement,
+		   Literal, Grouping, Unary, Binary,
+		   pprint }
 

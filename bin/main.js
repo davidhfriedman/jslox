@@ -10,7 +10,7 @@ const { pprint } = require('./ast')
 const { interpret } = require('./interpreter')
 let { hadError } = require('./errors')
 
-hadError = false
+hadError(false)
 // TODO hadRuntimeError = false
 
 function main() {
@@ -32,35 +32,37 @@ function error(line, message) {
 
 function report(line, where, message) {
   console.log(`[line ${line}] Error ${where}: ${message}`)
-  hadError = true
+  hadError(true)
 }
 
 function run(source) {
-  hadError = false
+  hadError(false)
   const scanner = new Scanner(source)
   const tokens = scanner.scanTokens()
   // TODO Chapter 3 test: just print the tokens.        
   //console.log('DBG TOKENS:')
-  //tokens.forEach(token => console.log(`<${token}>`))
+  //tokens.forEach(token => console.log(`<${token}>`)) //DBG
   const parser = new Parser(tokens)
   while (!parser.atEnd()) {
     const expression = parser.parse()
     // stop on synax errors
-    if (hadError) { return }
+    if (hadError()) { return }
     try {
-      //console.log(`DBG ${pprint(expression)}`)
+      //console.log(`DBG A ${pprint(expression)}`)
       const result = interpret(expression)
-      //console.log(`DBG ${pprint(expression)} => ${result}`)
+      //console.log(`DBG B ${pprint(expression)} => ${result}`)
     } catch (e) {
       console.log('in run() : ', e.name, ':', e.message)
       console.log(source)
+      //console.log('DBG C', e)
+      parser.synchronize()
     }
   }
 }
 
 function runFile(path) {
   run(fs.readFileSync(path, 'utf8'))
-  if (hadError) {
+  if (hadError()) {
     process.exit(65)
   }
   /* TODO 
@@ -81,7 +83,7 @@ function runPrompt() {
   
   rl.on('line', (line) => {
     run(line)
-    hadError = false // don't kill the interactive session
+    hadError(false) // don't kill the interactive session
     rl.prompt()
   })
 }
