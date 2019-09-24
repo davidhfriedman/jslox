@@ -19,8 +19,19 @@ Hello, world!
 false
 ```
 
-There are some test files in t/ but they don't keep up with the grammar problems
+### Debugging and testing
+
+There are some test files in t/ but they don't keep up with the grammar problems.
 A proper test suite is on the TODO list...
+
+For quickie command line tests:
+
+```$ printf "var a = 19;\nprint a;\n" | npm run d```
+
+```npm run r``` === ```node bin/main.js```
+```npm run d``` === ```node bin/main.js -d```
+
+-d flag for development mode: prints stack traces for debugging interpreter errors
 
 ## wip status
 

@@ -1,5 +1,6 @@
 const { TokenType, Token } = require('./token')
 const { pprint } = require('./ast')
+const { Environment } = require('./environment')
 
 const error = function(token, message) {
   report(token.line, ` at '${token.lexeme}' ${message}`)
@@ -59,23 +60,33 @@ function typeCheckNumbersOrStrings(operator, left, right) {
   }
 }
 
-const InterpreterVisitor = {
-  visitProgram: function (p) {
+function Interpreter() {
+  this.environment = new Environment()
+  this.visitProgram = function (p) {
     p.declarations.forEach(d => { d.accept(this) } )
     return null
-  },
-  visitPrintStatement: function (s) {
+  }
+  this.visitDeclaration = function (d) {
+    let e
+    if (d.val) {
+      e = d.val.accept(this)
+    }
+    // TODO - this is gross. Find a better way.
+    this.environment.define(d.name.lexeme, e)
+    return null
+  }
+  this.visitPrintStatement = function (s) {
     let e = s.expr.accept(this)
     console.log(e) // print e
     return null
-  },
-  visitExpressionStatement: function (s) {
+  }
+  this.visitExpressionStatement = function (s) {
     let e = s.expr.accept(this)
     return null
-  },
-  visitLiteral: function (l) { return l.val },
-  visitGrouping: function (g) { return g.expr.accept(this) },
-  visitUnary: function (u) {
+  }
+  this.visitLiteral = function (l) { return l.val }
+  this.visitGrouping = function (g) { return g.expr.accept(this) }
+  this.visitUnary = function (u) {
     let e = u.expr.accept(this)
     if (u.operator.type === TokenType.MINUS) {
       typeCheckNumber(u.operator, e)
@@ -87,8 +98,8 @@ const InterpreterVisitor = {
       e = null
     }
     return e
-  },
-  visitBinary: function (b) {
+  }
+  this.visitBinary = function (b) {
     // TODO: later, for short circuiting logical operators, don't evaulate right unless needed
     // NOTE: operators evaluated in left-to-right order. Do we declare this part of the
     // semantics of Lox? Or is it an implementation decision not to be relied on?
@@ -142,11 +153,15 @@ const InterpreterVisitor = {
     }
     return e
   }
+  this.visitVariable = function (v) {
+    // TODO - this is gross. Find a better way.
+    let value = this.environment.lookup(v.name.lexeme)
+    return value
+  }
+  this.interpret = function (e) {
+    return e.accept(this)
+  }
 }
 
-function interpret(e) {
-  return e.accept(InterpreterVisitor)
-}
-
-module.exports = { interpret }
+module.exports = { Interpreter }
 

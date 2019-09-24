@@ -1,6 +1,6 @@
 const { TokenType, Token } = require('./token')
 const { Program, Declaration, PrintStatement, ExpressionStatement,
-	Literal, Grouping, Unary, Binary } = require('./ast')
+	Literal, Grouping, Unary, Binary, Variable } = require('./ast')
 const { report, hadError } = require('./errors')
 
 function Parser(tokens) {
@@ -190,6 +190,7 @@ Parser.prototype.primary = function () {
   if (this.match(TokenType.TRUE)) { return new Literal(true) }
   if (this.match(TokenType.NIL)) { return new Literal(null) }
   if (this.match(TokenType.NUMBER, TokenType.STRING)) { return new Literal(this.previous().literal) }
+  if (this.match(TokenType.IDENTIFIER)) { return new Variable(this.previous()) }
   if (this.match(TokenType.LEFT_PAREN)) {
     const expr = this.expression()
     this.consume(TokenType.RIGHT_PAREN, `Expect ')' after expression.`)

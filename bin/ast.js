@@ -52,6 +52,13 @@ function Binary(left, operator, right) {
 
 Binary.prototype.accept = function (v) { return v.visitBinary(this) }
 
+function Variable(name, value) {
+  this.name = name
+  this.value = value
+}
+
+Variable.prototype.accept = function (v) { return v.visitVariable(this) }
+
 const PPrintVisitor = {
   visitProgram: function (p) { return `(program ${p.declarations.map(d => d.expr.accept(this)).join(' ')})` },
   visitDeclaration: function (d) { return `(decl ${d.name} ${d.val.accept(this)})` },
@@ -60,7 +67,8 @@ const PPrintVisitor = {
   visitLiteral: function (l) { return `${l.val ? l.val : 'nil'}` },
   visitGrouping: function (g) { return `(group ${g.expr.accept(this)})` },
   visitUnary: function (u) { return `(${u.operator.lexeme} ${u.expr.accept(this)})` },
-  visitBinary: function (b) { return `(${b.operator.lexeme} ${b.left.accept(this)} ${b.right.accept(this)})` }
+  visitBinary: function (b) { return `(${b.operator.lexeme} ${b.left.accept(this)} ${b.right.accept(this)})` },
+  visitVariable: function (v) { return `(var ${v.name} ${v.value}` }
 }
 
 function pprint(e) {
@@ -69,6 +77,6 @@ function pprint(e) {
 
 // TODO: name pprint
 module.exports = { Program, Declaration, PrintStatement, ExpressionStatement,
-		   Literal, Grouping, Unary, Binary,
+		   Literal, Grouping, Unary, Binary, Variable,
 		   pprint }
 

@@ -7,18 +7,31 @@ const Scanner = require('./scanner')
 const Parser = require('./parser')
 // TODO: name pprint
 const { pprint } = require('./ast')
-const { interpret } = require('./interpreter')
+const { Interpreter } = require('./interpreter')
 let { hadError } = require('./errors')
 
 hadError(false)
 // TODO hadRuntimeError = false
 
+let development_mode = false
+
 function main() {
-  if (process.argv.length > 3) {
-    console.log("Usage: jslox [script]")
+  let args = process.argv.slice(2)
+  if (args.length > 2) {
+    console.log("Usage: jslox [-d] [script]")
     process.exit(64)
-  } else if (process.argv.length == 3) {
-    runFile(process.argv[2])
+  }
+  if (args[0][0] === '-') {
+    if (args[0][1] !== 'd') {
+      console.log("Usage: jslox [-d] [script]")
+      process.exit(64)
+    } else {
+      development_mode = true
+      args.splice(0,1)
+    }
+  }
+  if (args.length > 0) {
+    runFile(process.argv[0])
   } else {                   
     runPrompt()
   }
@@ -35,33 +48,30 @@ function report(line, where, message) {
   hadError(true)
 }
 
-function run(source) {
+function run(source, interpreter) {
   hadError(false)
   const scanner = new Scanner(source)
   const tokens = scanner.scanTokens()
-  // TODO Chapter 3 test: just print the tokens.        
-  //console.log('DBG TOKENS:')
-  //tokens.forEach(token => console.log(`<${token}>`)) //DBG
   const parser = new Parser(tokens)
   while (!parser.atEnd()) {
     const expression = parser.parse()
-    // stop on synax errors
     if (hadError()) { return }
     try {
-      //console.log(`DBG A ${pprint(expression)}`)
-      const result = interpret(expression)
-      //console.log(`DBG B ${pprint(expression)} => ${result}`)
+      const result = interpreter.interpret(expression)
     } catch (e) {
       console.log('in run() : ', e.name, ':', e.message)
       console.log(source)
-      //console.log('DBG C', e)
+      if (development_mode) {
+	console.log(e)
+      }
       parser.synchronize()
     }
   }
 }
 
 function runFile(path) {
-  run(fs.readFileSync(path, 'utf8'))
+  const interpreter = new Interpreter()
+  run(fs.readFileSync(path, 'utf8'), interpreter)
   if (hadError()) {
     process.exit(65)
   }
@@ -72,7 +82,8 @@ function runFile(path) {
   */
 }
 
-function runPrompt() { 
+function runPrompt() {
+  const interpreter = new Interpreter()
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -82,7 +93,7 @@ function runPrompt() {
   rl.prompt()
   
   rl.on('line', (line) => {
-    run(line)
+    run(line, interpreter)
     hadError(false) // don't kill the interactive session
     rl.prompt()
   })
