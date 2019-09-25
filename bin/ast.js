@@ -6,12 +6,12 @@ function Program(declarations) {
 
 Program.prototype.accept = function (v) { return v.visitProgram(this) }
 
-function Declaration(name, val) {
+function VarDeclaration(name, val) {
   this.name = name
   this.val = val
 }
 
-Declaration.prototype.accept = function (v) { return v.visitDeclaration(this) }
+VarDeclaration.prototype.accept = function (v) { return v.visitVarDeclaration(this) }
 
 function PrintStatement(expr) {
   this.expr = expr
@@ -24,6 +24,13 @@ function ExpressionStatement(expr) {
 }
 
 ExpressionStatement.prototype.accept = function (v) { return v.visitExpressionStatement(this) }
+
+function Assignment(name, value) {
+  this.name = name
+  this.value = value
+}
+
+Assignment.prototype.accept = function (v) { return v.visitAssignment(this) }
 
 function Literal(val) {
   this.val = val
@@ -60,10 +67,11 @@ function Variable(name, value) {
 Variable.prototype.accept = function (v) { return v.visitVariable(this) }
 
 const PPrintVisitor = {
-  visitProgram: function (p) { return `(program ${p.declarations.map(d => d.expr.accept(this)).join(' ')})` },
-  visitDeclaration: function (d) { return `(decl ${d.name} ${d.val.accept(this)})` },
+  visitProgram: function (p) { return `(program ${p.declarations.map(d => d.accept(this)).join(' ')})` },
+  visitVarDeclaration: function (d) { return `(decl ${d.name} ${d.val.accept(this)})` },
   visitExpressionStatement: function (s) { return `(statement ${s.expr.accept(this)})` },
   visitPrintStatement: function (s) { return `(print ${s.expr.accept(this)})` },
+  visitAssignment: function (a) { return `(assign ${a.name} ${a.value.accept(this)})` },
   visitLiteral: function (l) { return `${l.val ? l.val : 'nil'}` },
   visitGrouping: function (g) { return `(group ${g.expr.accept(this)})` },
   visitUnary: function (u) { return `(${u.operator.lexeme} ${u.expr.accept(this)})` },
@@ -76,7 +84,7 @@ function pprint(e) {
 }
 
 // TODO: name pprint
-module.exports = { Program, Declaration, PrintStatement, ExpressionStatement,
-		   Literal, Grouping, Unary, Binary, Variable,
+module.exports = { Program, VarDeclaration, PrintStatement, ExpressionStatement,
+		   Assignment, Literal, Grouping, Unary, Binary, Variable,
 		   pprint }
 

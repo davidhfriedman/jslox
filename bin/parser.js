@@ -1,6 +1,6 @@
 const { TokenType, Token } = require('./token')
-const { Program, Declaration, PrintStatement, ExpressionStatement,
-	Literal, Grouping, Unary, Binary, Variable } = require('./ast')
+const { Program, VarDeclaration, PrintStatement, ExpressionStatement,
+	Assignment, Literal, Grouping, Unary, Binary, Variable } = require('./ast')
 const { report, hadError } = require('./errors')
 
 function Parser(tokens) {
@@ -86,14 +86,15 @@ Parser.prototype.match = function (...types) {
 Parser.prototype.program = function () {
   let program = []
   while (!this.atEnd()) {
-    program.push(this.statement())
+    program.push(this.declaration())
   }
   return new Program(program)
 }
 
-Parser.prototype.statement = function () {
+Parser.prototype.declaration = function () {
   if (this.match(TokenType.VAR)) {
-    return this.declaration()
+    x = this.varDeclaration()
+    return x
   } else if (this.match(TokenType.PRINT)) {
     return this.printStatement()
   } else {
@@ -101,7 +102,7 @@ Parser.prototype.statement = function () {
   }
 }
 
-Parser.prototype.declaration = function () {
+Parser.prototype.varDeclaration = function () {
   let name, value
   if (this.match(TokenType.IDENTIFIER)) {
     name = this.previous()
@@ -109,7 +110,7 @@ Parser.prototype.declaration = function () {
       value = this.expression()
     }
     this.consume(TokenType.SEMICOLON, "Expect ';' after print statement")
-    return new Declaration(name, value)
+    return new VarDeclaration(name, value)
   }
 }
 
@@ -126,7 +127,21 @@ Parser.prototype.expressionStatement = function () {
 }
 
 Parser.prototype.expression = function () {
-  return this.equality()
+  return this.assignment()
+}
+
+Parser.prototype.assignment = function () {
+  let expression = this.equality()
+  if (this.match(TokenType.EQUAL)) {
+    let lval = this.previous()
+    let value = this.assignment()
+    if (expression instanceof Variable) {
+      let name = expression.name.lexeme
+      return new Assignment(name, value)
+    }
+    return this.error(lval, "Invalid assignment target.")
+  }
+  return expression
 }
 
 Parser.prototype.equality = function () {
@@ -196,7 +211,6 @@ Parser.prototype.primary = function () {
     this.consume(TokenType.RIGHT_PAREN, `Expect ')' after expression.`)
     return new Grouping(expr)
   }
-  hadError(true)
   throw this.error(this.peek(), "Expect expression.")
 }
 

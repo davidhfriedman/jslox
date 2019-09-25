@@ -21,13 +21,15 @@ function main() {
     console.log("Usage: jslox [-d] [script]")
     process.exit(64)
   }
-  if (args[0][0] === '-') {
-    if (args[0][1] !== 'd') {
-      console.log("Usage: jslox [-d] [script]")
-      process.exit(64)
-    } else {
-      development_mode = true
-      args.splice(0,1)
+  if (args.length >= 1) {
+    if (args[0][0] === '-') {
+      if (args[0][1] !== 'd') {
+	console.log("Usage: jslox [-d] [script]")
+	process.exit(64)
+      } else {
+	development_mode = true
+	args.splice(0,1)
+      }
     }
   }
   if (args.length > 0) {

@@ -66,7 +66,7 @@ function Interpreter() {
     p.declarations.forEach(d => { d.accept(this) } )
     return null
   }
-  this.visitDeclaration = function (d) {
+  this.visitVarDeclaration = function (d) {
     let e
     if (d.val) {
       e = d.val.accept(this)
@@ -83,6 +83,11 @@ function Interpreter() {
   this.visitExpressionStatement = function (s) {
     let e = s.expr.accept(this)
     return null
+  }
+  this.visitAssignment = function (a) {
+    let v = a.value.accept(this)
+    this.environment.assign(a.name, v)
+    return v
   }
   this.visitLiteral = function (l) { return l.val }
   this.visitGrouping = function (g) { return g.expr.accept(this) }
