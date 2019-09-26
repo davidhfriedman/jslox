@@ -21,6 +21,13 @@ class TypeError extends Error {
   }
 }
 
+class UninitializedVariableReferenceError extends Error {
+  constructor(token) {
+    super(`Line ${token.line} Uninitialized variable '${token.lexeme}'`)
+    this.name = "UninitializedVariableReferenceError"
+  }
+}
+
 function isTruthy (e) {
   // The Ruby way: false and nil are falsey all else truthy
   if (e === null || e === undefined) { return false }
@@ -60,11 +67,19 @@ function typeCheckNumbersOrStrings(operator, left, right) {
   }
 }
 
-function Interpreter() {
+function Interpreter(mode = null) {
+  // in mode "repl" visitProgram returns the value of the top level, which might be an expression
   this.environment = new Environment()
+  this.mode = mode
   this.visitProgram = function (p) {
-    p.declarations.forEach(d => d.accept(this) )
-    return null
+    let r = null
+    if (this.mode === "repl") {
+      r = p.declarations.map(d => d.accept(this))
+      if (r.length === 1) { r = r[0] }
+    } else {
+      p.declarations.forEach(d => d.accept(this))
+    }
+    return r
   }
   this.visitVarDeclaration = function (d) {
     let e
@@ -93,7 +108,7 @@ function Interpreter() {
   }
   this.visitExpressionStatement = function (s) {
     let e = s.expr.accept(this)
-    return null
+    return e
   }
   this.visitAssignment = function (a) {
     let v = a.value.accept(this)
@@ -172,7 +187,11 @@ function Interpreter() {
   this.visitVariable = function (v) {
     // TODO - this is gross. Find a better way.
     let value = this.environment.lookup(v.name.lexeme)
-    return value
+    if (value === undefined) { // meta-value for un-initialzed variable
+      throw new UninitializedVariableReferenceError(v.name)
+    } else {
+      return value
+    }
   }
   this.interpret = function (e) {
     return e.accept(this)

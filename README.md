@@ -3,12 +3,9 @@
 
 ## usage
 
-```node bin/main.js``` launches a REPL.
+```node bin/main.js``` launches a REPL. prints the values of expressions (and null for statements)
 
 ```node bin/main.js file``` loads, parses, and interprets file then exits.
-
-As of 2019-09-23 ```print <expression>;``` is the only thing that does anything.
-<expression> can be 4-op arithmetic, comparisons, strings, true, false.
 
 ### examples:
 
@@ -38,4 +35,7 @@ For quickie command line tests:
 
 ## wip status
 
-2019-09-23 midway through ch. 8, global variables
+2019-09-26 chapter 8 done, with challenges
+BUG: printf "var; print a;\n" | npm run r is "at ';' Expect expression" but should be "at 'var' Expect variable name"
+TODO: Undefined varible error doesn't give the line number, because it is thrown within Environment which doesb't have the token
+

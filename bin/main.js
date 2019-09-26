@@ -62,6 +62,9 @@ function run(source, interpreter) {
     }
     try {
       const result = interpreter.interpret(expression)
+      if (interpreter.mode === "repl") {
+	console.log(result)
+      }
     } catch (e) {
       console.log('in run() : ', e.name, ':', e.message)
       console.log(source)
@@ -87,7 +90,7 @@ function runFile(path) {
 }
 
 function runPrompt() {
-  const interpreter = new Interpreter()
+  const interpreter = new Interpreter("repl")
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
