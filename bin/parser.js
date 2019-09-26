@@ -1,5 +1,6 @@
 const { TokenType, Token } = require('./token')
-const { Program, VarDeclaration, PrintStatement, ExpressionStatement,
+const { Program, VarDeclaration,
+	Block, ExpressionStatement, PrintStatement,
 	Assignment, Literal, Grouping, Unary, Binary, Variable } = require('./ast')
 const { report, hadError } = require('./errors')
 
@@ -93,8 +94,9 @@ Parser.prototype.program = function () {
 
 Parser.prototype.declaration = function () {
   if (this.match(TokenType.VAR)) {
-    x = this.varDeclaration()
-    return x
+    return this.varDeclaration()
+  } else if (this.match(TokenType.LEFT_BRACE)) {
+    return this.blockStatement()
   } else if (this.match(TokenType.PRINT)) {
     return this.printStatement()
   } else {
@@ -114,16 +116,25 @@ Parser.prototype.varDeclaration = function () {
   }
 }
 
-Parser.prototype.printStatement = function () {
-  let expr = this.expression()
-  this.consume(TokenType.SEMICOLON, "Expect ';' after print statement")
-  return new PrintStatement(expr)
+Parser.prototype.blockStatement = function () {
+  let statements = []
+  while (!this.check(TokenType.RIGHT_BRACE) && !this.atEnd()) {
+    statements.push(this.declaration())
+  }
+  this.consume(TokenType.RIGHT_BRACE, "Expect '}' after block.");
+  return new Block(statements)
 }
 
 Parser.prototype.expressionStatement = function () {
   let expr = this.expression()
   this.consume(TokenType.SEMICOLON, "Expect ';' after expression")
   return new ExpressionStatement(expr)
+}
+
+Parser.prototype.printStatement = function () {
+  let expr = this.expression()
+  this.consume(TokenType.SEMICOLON, "Expect ';' after print statement")
+  return new PrintStatement(expr)
 }
 
 Parser.prototype.expression = function () {

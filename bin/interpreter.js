@@ -63,7 +63,7 @@ function typeCheckNumbersOrStrings(operator, left, right) {
 function Interpreter() {
   this.environment = new Environment()
   this.visitProgram = function (p) {
-    p.declarations.forEach(d => { d.accept(this) } )
+    p.declarations.forEach(d => d.accept(this) )
     return null
   }
   this.visitVarDeclaration = function (d) {
@@ -79,6 +79,17 @@ function Interpreter() {
     let e = s.expr.accept(this)
     console.log(e) // print e
     return null
+  }
+  this.visitBlockStatement = function (b) {
+    // TODO: passing an env parm via the accept method would be more elegant
+    let prevEnv = this.environment
+    try {
+      this.environment = new Environment(this.environment)
+      b.declarations.forEach(d => { d.accept(this) } )
+      return null
+    } finally {
+      this.environment = prevEnv
+    }
   }
   this.visitExpressionStatement = function (s) {
     let e = s.expr.accept(this)

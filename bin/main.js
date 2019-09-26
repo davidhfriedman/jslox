@@ -33,7 +33,7 @@ function main() {
     }
   }
   if (args.length > 0) {
-    runFile(process.argv[0])
+    runFile(args[0])
   } else {                   
     runPrompt()
   }
@@ -57,7 +57,9 @@ function run(source, interpreter) {
   const parser = new Parser(tokens)
   while (!parser.atEnd()) {
     const expression = parser.parse()
-    if (hadError()) { return }
+    if (!development_mode) {
+      if (hadError()) { return }
+    }
     try {
       const result = interpreter.interpret(expression)
     } catch (e) {

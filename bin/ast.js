@@ -13,17 +13,23 @@ function VarDeclaration(name, val) {
 
 VarDeclaration.prototype.accept = function (v) { return v.visitVarDeclaration(this) }
 
-function PrintStatement(expr) {
-  this.expr = expr
+function Block(declarations) {
+  this.declarations = declarations
 }
 
-PrintStatement.prototype.accept = function (v) { return v.visitPrintStatement(this) }
+Block.prototype.accept = function (v) { return v.visitBlockStatement(this) }
 
 function ExpressionStatement(expr) {
   this.expr = expr
 }
 
 ExpressionStatement.prototype.accept = function (v) { return v.visitExpressionStatement(this) }
+
+function PrintStatement(expr) {
+  this.expr = expr
+}
+
+PrintStatement.prototype.accept = function (v) { return v.visitPrintStatement(this) }
 
 function Assignment(name, value) {
   this.name = name
@@ -69,6 +75,7 @@ Variable.prototype.accept = function (v) { return v.visitVariable(this) }
 const PPrintVisitor = {
   visitProgram: function (p) { return `(program ${p.declarations.map(d => d.accept(this)).join(' ')})` },
   visitVarDeclaration: function (d) { return `(decl ${d.name} ${d.val.accept(this)})` },
+  visitBlockStatement: function (b) { return `(block ${b.declarations.map(d => d.accept(this)).join(' ')})` },
   visitExpressionStatement: function (s) { return `(statement ${s.expr.accept(this)})` },
   visitPrintStatement: function (s) { return `(print ${s.expr.accept(this)})` },
   visitAssignment: function (a) { return `(assign ${a.name} ${a.value.accept(this)})` },
@@ -84,7 +91,8 @@ function pprint(e) {
 }
 
 // TODO: name pprint
-module.exports = { Program, VarDeclaration, PrintStatement, ExpressionStatement,
+module.exports = { Program, VarDeclaration,
+		   Block, ExpressionStatement, PrintStatement,
 		   Assignment, Literal, Grouping, Unary, Binary, Variable,
 		   pprint }
 
