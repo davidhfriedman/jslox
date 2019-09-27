@@ -96,8 +96,10 @@ Parser.prototype.program = function () {
 Parser.prototype.declaration = function () {
   if (this.match(TokenType.VAR)) {
     return this.varDeclaration()
+  } else if (this.match(TokenType.FOR)) {
+    return this.forStatement()
   } else if (this.match(TokenType.IF)) {
-    return this.IfStatement()
+    return this.ifStatement()
   } else if (this.match(TokenType.LEFT_BRACE)) {
     return this.blockStatement()
   } else if (this.match(TokenType.PRINT)) {
@@ -139,7 +141,50 @@ Parser.prototype.blockStatement = function () {
   return new Block(statements)
 }
 
-Parser.prototype.IfStatement = function () {
+Parser.prototype.forStatement = function () {
+  this.consume(TokenType.LEFT_PAREN, "Expect '(' after 'for'.");
+  let initializer
+  if (this.match(TokenType.SEMICOLON)) {
+    initializer = undefined
+  } else if (this.match(TokenType.VAR)) {
+    // TODO for(var a = b = c; will work here, is that ok?
+    initializer = this.varDeclaration();
+  } else {
+    initializer = this.expressionStatement()
+  }
+
+  let condition
+  if (!this.check(TokenType.SEMICOLON)) {
+    condition = this.expression()
+  }
+  this.consume(TokenType.SEMICOLON, "Expect ';' after loop condition.")
+
+  let increment = null
+  if (!this.check(TokenType.RIGHT_PAREN)) {
+    increment = this.expression()
+  }
+  this.consume(TokenType.RIGHT_PAREN, "Expect ')' after for clauses.")
+
+  // TODO: factor statement out of declaration, because a lone varDec after while is a no-op.
+  let body = this.declaration()
+
+  if (increment != null) {
+    body = new Block([body, new ExpressionStatement(increment)])
+  }
+
+  if (condition === undefined) {
+    condition = new Literal(true)
+  }
+  body = new WhileStatement(condition, body)
+
+  if (initializer !== undefined) {
+    body = new Block([initializer, body])
+  }
+  
+  return body
+}
+
+Parser.prototype.ifStatement = function () {
   let condition, whenTrue, whenFalse
   if (this.match(TokenType.LEFT_PAREN)) {
     condition = this.expression()
@@ -149,7 +194,7 @@ Parser.prototype.IfStatement = function () {
     if (this.match(TokenType.ELSE)) {
       whenFalse = this.declaration()
     }
-    return new IfStatement(condition, whenTrue, whenFalse)
+    return new ifStatement(condition, whenTrue, whenFalse)
   }
 }
 

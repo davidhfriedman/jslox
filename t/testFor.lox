@@ -1,0 +1,20 @@
+print "first";
+
+for(var a = 1; a < 5; a = a + 1) {
+  print a;
+}
+// should be not defined
+//print a;
+
+print "second";
+
+var b = 1;
+for(; b < 5; b = b + 1) {
+  print b;
+}
+
+//print "third";
+//var c = 1;
+//for(; ; c = c + 1) {
+//  print "never ends - empty condition is 'true'";
+//}
