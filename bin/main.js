@@ -63,13 +63,13 @@ function run(source, interpreter) {
     try {
       const result = interpreter.interpret(expression)
       if (interpreter.mode === "repl") {
-	console.log(result)
+	console.log(result) // repl mode echo expression value
       }
     } catch (e) {
-      console.log('in run() : ', e.name, ':', e.message)
-      console.log(source)
+      console.log('in run() : ', e.name, ':', e.message) // error reporting
+      console.log(source) // error reporting
       if (development_mode) {
-	console.log(e)
+	console.log(e) // dev mode error reporting
       }
       parser.synchronize()
     }

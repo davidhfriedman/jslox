@@ -1,6 +1,6 @@
 const { TokenType, Token } = require('./token')
 const { Program, VarDeclaration,
-	Block, ExpressionStatement, PrintStatement,
+	Block, IfStatement, ExpressionStatement, PrintStatement,
 	Assignment, Literal, Grouping, Unary, Binary, Variable } = require('./ast')
 const { report, hadError } = require('./errors')
 
@@ -28,7 +28,7 @@ Parser.prototype.advance = function () {
 
 Parser.prototype.consume = function(type, message) {
   if (this.check(type)) { return this.advance() }
-  else { hadError(true); throw this.error(this.peek(), message) }
+  else { throw this.error(this.peek(), message); }
 }
 
 Parser.prototype.error = function(token, message) {
@@ -95,6 +95,8 @@ Parser.prototype.program = function () {
 Parser.prototype.declaration = function () {
   if (this.match(TokenType.VAR)) {
     return this.varDeclaration()
+  } else if (this.match(TokenType.IF)) {
+    return this.IfStatement()
   } else if (this.match(TokenType.LEFT_BRACE)) {
     return this.blockStatement()
   } else if (this.match(TokenType.PRINT)) {
@@ -111,7 +113,7 @@ Parser.prototype.varDeclaration = function () {
     if (this.match(TokenType.EQUAL)) {
       value = this.expression()
     }
-    this.consume(TokenType.SEMICOLON, "Expect ';' after print statement")
+    this.consume(TokenType.SEMICOLON, "Expect ';' after variable declaration")
     return new VarDeclaration(name, value)
   }
 }
@@ -123,6 +125,20 @@ Parser.prototype.blockStatement = function () {
   }
   this.consume(TokenType.RIGHT_BRACE, "Expect '}' after block.");
   return new Block(statements)
+}
+
+Parser.prototype.IfStatement = function () {
+  let condition, whenTrue, whenFalse
+  if (this.match(TokenType.LEFT_PAREN)) {
+    condition = this.expression()
+    this.consume(TokenType.RIGHT_PAREN, "Expect ')' after IF condition.");
+    // TODO: factor statement out of declaration, because a lone varDec after an IF is a no-op.
+    whenTrue = this.declaration()
+    if (this.match(TokenType.ELSE)) {
+      whenFalse = this.declaration()
+    }
+    return new IfStatement(condition, whenTrue, whenFalse)
+  }
 }
 
 Parser.prototype.expressionStatement = function () {

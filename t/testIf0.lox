@@ -1,0 +1,4 @@
+var a = 19
+if (a == 19) {
+   print "a is 19, that worked";
+}

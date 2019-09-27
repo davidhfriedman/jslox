@@ -1,0 +1,40 @@
+if (1 > 2)
+   print "World ends";
+
+if (1 > 2)
+   print "World ends";
+else
+   print "All's well";
+
+var a = 19;
+if (a == 19) {
+   print "a is 19, that worked";
+}
+
+if (a != 19) {
+   print "a isn't 19, unexpected this is";
+}
+
+if (a != 23) {
+   print "a isn't 23, ok";
+} else {
+   print "a is 23, wtf?";
+}
+
+if (1 == 1) {
+   var b = "inner B";
+   print b;
+}
+
+// out of scope, should fail
+// print b;
+
+// this is allowed, but silly
+if (1 == 1)
+   var b = "ce n'est pas une pipe";
+
+// should fail, out of scope, but succeeds
+print b;
+
+// should fail, out of scope
+// print c;

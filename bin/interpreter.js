@@ -106,6 +106,16 @@ function Interpreter(mode = null) {
       this.environment = prevEnv
     }
   }
+  this.visitIfStatement = function (i) {
+    let e = i.condition.accept(this)
+    if (e) {
+      return i.then.accept(this)
+    } else if (i.else) {
+      return i.else.accept(this)
+    } else {
+      return null
+    }
+  }
   this.visitExpressionStatement = function (s) {
     let e = s.expr.accept(this)
     return e

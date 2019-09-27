@@ -19,6 +19,14 @@ function Block(declarations) {
 
 Block.prototype.accept = function (v) { return v.visitBlockStatement(this) }
 
+function IfStatement(condition, whenTrue, whenFalse) {
+  this.condition = condition
+  this.then = whenTrue
+  this.else = whenFalse
+}
+
+IfStatement.prototype.accept = function (v) { return v.visitIfStatement(this) }
+
 function ExpressionStatement(expr) {
   this.expr = expr
 }
@@ -76,6 +84,9 @@ const PPrintVisitor = {
   visitProgram: function (p) { return `(program ${p.declarations.map(d => d.accept(this)).join(' ')})` },
   visitVarDeclaration: function (d) { return `(decl ${d.name} ${d.val.accept(this)})` },
   visitBlockStatement: function (b) { return `(block ${b.declarations.map(d => d.accept(this)).join(' ')})` },
+  visitIfStatement: function (i) {
+    return `(if ${i.condition.accept(this)} ${i.then.accept(this)}` +
+      `${i.else ? i.else.accept(this) : ''})` },
   visitExpressionStatement: function (s) { return `(statement ${s.expr.accept(this)})` },
   visitPrintStatement: function (s) { return `(print ${s.expr.accept(this)})` },
   visitAssignment: function (a) { return `(assign ${a.name} ${a.value.accept(this)})` },
@@ -92,7 +103,7 @@ function pprint(e) {
 
 // TODO: name pprint
 module.exports = { Program, VarDeclaration,
-		   Block, ExpressionStatement, PrintStatement,
+		   Block, IfStatement, ExpressionStatement, PrintStatement,
 		   Assignment, Literal, Grouping, Unary, Binary, Variable,
 		   pprint }
 
