@@ -35,7 +35,9 @@ For quickie command line tests:
 
 ## wip status
 
-2019-09-27 chapter 9 in progress
+2019-09-27 chapter 9 done, except for Challenge #3, break statement
+
+TODO: break statement
 
 BUG: printf "var; print a;\n" | npm run r is "at ';' Expect expression" but should be "at 'var' Expect variable name"
 
