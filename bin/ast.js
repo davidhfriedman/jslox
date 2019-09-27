@@ -46,6 +46,14 @@ function Assignment(name, value) {
 
 Assignment.prototype.accept = function (v) { return v.visitAssignment(this) }
 
+function Logical(left, operator, right) {
+  this.left = left
+  this.operator = operator
+  this.right = right
+}
+
+Logical.prototype.accept = function (v) { return v.visitLogical(this) }
+
 function Literal(val) {
   this.val = val
 }
@@ -90,6 +98,7 @@ const PPrintVisitor = {
   visitExpressionStatement: function (s) { return `(statement ${s.expr.accept(this)})` },
   visitPrintStatement: function (s) { return `(print ${s.expr.accept(this)})` },
   visitAssignment: function (a) { return `(assign ${a.name} ${a.value.accept(this)})` },
+  visitLogical: function (l) { return `(${l.operator.lexeme} ${l.left.accept(this)} ${l.right.accept(this)})` },
   visitLiteral: function (l) { return `${l.val ? l.val : 'nil'}` },
   visitGrouping: function (g) { return `(group ${g.expr.accept(this)})` },
   visitUnary: function (u) { return `(${u.operator.lexeme} ${u.expr.accept(this)})` },
@@ -104,6 +113,7 @@ function pprint(e) {
 // TODO: name pprint
 module.exports = { Program, VarDeclaration,
 		   Block, IfStatement, ExpressionStatement, PrintStatement,
-		   Assignment, Literal, Grouping, Unary, Binary, Variable,
+		   Assignment, Logical,
+		   Literal, Grouping, Unary, Binary, Variable,
 		   pprint }
 

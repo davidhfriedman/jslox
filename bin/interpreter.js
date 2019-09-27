@@ -125,6 +125,15 @@ function Interpreter(mode = null) {
     this.environment.assign(a.name, v)
     return v
   }
+  this.visitLogical = function (l) {
+    let left = l.left.accept(this)
+    if (l.operator.type === TokenType.OR) {
+      if (isTruthy(left)) { return left }
+    } else {
+      if (!isTruthy(left)) { return left } // TODO ???
+    }
+    return l.right.accept(this)
+  }
   this.visitLiteral = function (l) { return l.val }
   this.visitGrouping = function (g) { return g.expr.accept(this) }
   this.visitUnary = function (u) {

@@ -1,7 +1,8 @@
 const { TokenType, Token } = require('./token')
 const { Program, VarDeclaration,
 	Block, IfStatement, ExpressionStatement, PrintStatement,
-	Assignment, Literal, Grouping, Unary, Binary, Variable } = require('./ast')
+	Assignment, Logical,
+	Literal, Grouping, Unary, Binary, Variable } = require('./ast')
 const { report, hadError } = require('./errors')
 
 function Parser(tokens) {
@@ -158,7 +159,7 @@ Parser.prototype.expression = function () {
 }
 
 Parser.prototype.assignment = function () {
-  let expression = this.equality()
+  let expression = this.logical_or()
   if (this.match(TokenType.EQUAL)) {
     let lval = this.previous()
     let value = this.assignment()
@@ -169,6 +170,26 @@ Parser.prototype.assignment = function () {
     return this.error(lval, "Invalid assignment target.")
   }
   return expression
+}
+
+Parser.prototype.logical_or = function () {
+  let expr = this.logical_and()
+  while (this.match(TokenType.OR)) {
+    const operator = this.previous()
+    const right = this.logical_and()
+    expr = new Logical(expr, operator, right)
+  }
+  return expr
+}
+
+Parser.prototype.logical_and = function () {
+  let expr = this.equality()
+  while (this.match(TokenType.AND)) {
+    const operator = this.previous()
+    const right = this.equality()
+    expr = new Logical(expr, operator, right)
+  }
+  return expr
 }
 
 Parser.prototype.equality = function () {

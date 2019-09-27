@@ -35,7 +35,9 @@ For quickie command line tests:
 
 ## wip status
 
-2019-09-26 chapter 8 done, with challenges
+2019-09-27 chapter 9 in progress
+
 BUG: printf "var; print a;\n" | npm run r is "at ';' Expect expression" but should be "at 'var' Expect variable name"
+
 TODO: Undefined varible error doesn't give the line number, because it is thrown within Environment which doesb't have the token
 

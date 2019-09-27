@@ -1,0 +1,7 @@
+print "hi" or 2; // "hi"
+print nil or "yes"; // "yes"
+print nil and "zow"; // nil
+print 0 and "zow"; // 0
+print "fweep" and "fwop"; // "fwop"
+print true and nil; // nil
+print true and true; // true
