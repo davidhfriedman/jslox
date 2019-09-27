@@ -22,7 +22,7 @@ Environment.prototype.assign = function(name, value) {
     return
   }
   if (this.enclosing != null) {
-    this.enclosing.assign(name, value)
+    return this.enclosing.assign(name, value)
   }
   throw new UndefinedVariableError(name)
 }
