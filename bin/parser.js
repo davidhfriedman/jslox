@@ -1,6 +1,6 @@
 const { TokenType, Token } = require('./token')
 const { Program, VarDeclaration,
-	Block, IfStatement, ExpressionStatement, PrintStatement,
+	Block, IfStatement, ExpressionStatement, PrintStatement, WhileStatement,
 	Assignment, Logical,
 	Literal, Grouping, Unary, Binary, Variable } = require('./ast')
 const { report, hadError } = require('./errors')
@@ -102,6 +102,8 @@ Parser.prototype.declaration = function () {
     return this.blockStatement()
   } else if (this.match(TokenType.PRINT)) {
     return this.printStatement()
+  } else if (this.match(TokenType.WHILE)) {
+    return this.whileStatement()
   } else {
     return this.expressionStatement()
   }
@@ -117,6 +119,15 @@ Parser.prototype.varDeclaration = function () {
     this.consume(TokenType.SEMICOLON, "Expect ';' after variable declaration")
     return new VarDeclaration(name, value)
   }
+}
+
+Parser.prototype.whileStatement = function () {
+  this.consume(TokenType.LEFT_PAREN, "Expect '(' after 'while'.");
+  const condition = this.expression()
+  this.consume(TokenType.RIGHT_PAREN, "Expect ')' after condition.");
+  // TODO: factor statement out of declaration, because a lone varDec after while is a no-op.
+  const body = this.declaration()
+  return new WhileStatement(condition, body)
 }
 
 Parser.prototype.blockStatement = function () {

@@ -13,6 +13,13 @@ function VarDeclaration(name, val) {
 
 VarDeclaration.prototype.accept = function (v) { return v.visitVarDeclaration(this) }
 
+function WhileStatement(condition, body) {
+  this.condition = condition
+  this.body = body
+}
+
+WhileStatement.prototype.accept = function (v) { return v.visitWhileStatement(this) }
+
 function Block(declarations) {
   this.declarations = declarations
 }
@@ -91,6 +98,7 @@ Variable.prototype.accept = function (v) { return v.visitVariable(this) }
 const PPrintVisitor = {
   visitProgram: function (p) { return `(program ${p.declarations.map(d => d.accept(this)).join(' ')})` },
   visitVarDeclaration: function (d) { return `(decl ${d.name} ${d.val.accept(this)})` },
+  visitWhileStatement: function (w) { return `(while ${b.condition.accept(this)} ${b.body.accept(this)})` },
   visitBlockStatement: function (b) { return `(block ${b.declarations.map(d => d.accept(this)).join(' ')})` },
   visitIfStatement: function (i) {
     return `(if ${i.condition.accept(this)} ${i.then.accept(this)}` +
@@ -112,7 +120,7 @@ function pprint(e) {
 
 // TODO: name pprint
 module.exports = { Program, VarDeclaration,
-		   Block, IfStatement, ExpressionStatement, PrintStatement,
+		   Block, IfStatement, ExpressionStatement, PrintStatement, WhileStatement,
 		   Assignment, Logical,
 		   Literal, Grouping, Unary, Binary, Variable,
 		   pprint }

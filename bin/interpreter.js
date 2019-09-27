@@ -95,6 +95,12 @@ function Interpreter(mode = null) {
     console.log(e) // print e
     return null
   }
+  this.visitWhileStatement = function (w) {
+    while (isTruthy(w.condition.accept(this))) {
+      w.body.accept(this)
+    }
+    return null
+  }
   this.visitBlockStatement = function (b) {
     // TODO: passing an env parm via the accept method would be more elegant
     let prevEnv = this.environment
