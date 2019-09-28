@@ -95,6 +95,10 @@ function Interpreter(mode = null) {
     console.log(e) // print e
     return null
   }
+  this.visitBreakStatement = function (b) {
+    console.log("BREAK!")
+    return null
+  }
   this.visitWhileStatement = function (w) {
     while (isTruthy(w.condition.accept(this))) {
       w.body.accept(this)
