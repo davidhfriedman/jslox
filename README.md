@@ -35,7 +35,7 @@ For quickie command line tests:
 
 ## wip status
 
-2019-09-27 chapter 9 done, except for Challenge #3, break statement
+2019-09-27 chapter 9 done, except for Challenge #3, break statement in progress
 
 TODO: break statement
 
