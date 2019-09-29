@@ -1,0 +1,11 @@
+var b = 1;
+while (b < 5) {
+  print b;
+  var c = 0;
+  while (c < b) {
+    print c;
+    if (c > 3)
+      break;
+  }
+  b = b + 1;
+}

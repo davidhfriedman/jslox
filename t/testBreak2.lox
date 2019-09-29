@@ -1,7 +1,8 @@
 var a = 1;
 while (a < 5) {
   print a;
-  break;
+  if (a > 3)
+    print a;
   a = a + 1;
 }
 print a;
