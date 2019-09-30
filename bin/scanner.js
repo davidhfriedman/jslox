@@ -26,6 +26,7 @@ Scanner.prototype.keywords = {
   'true': TokenType.TRUE,
   'var': TokenType.VAR,
   'while': TokenType.WHILE,
+  'break': TokenType.BREAK,
 }
 
 Scanner.prototype.atEnd = function () {

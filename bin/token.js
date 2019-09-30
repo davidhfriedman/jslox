@@ -41,7 +41,8 @@ const TokenType = {
   TRUE: 'true',
   VAR: 'var',
   WHILE: 'while',
-
+  BREAK: 'break',
+    
   EOF: 'eof'
 }
 

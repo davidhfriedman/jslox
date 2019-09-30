@@ -14,6 +14,9 @@ class InterpreterError extends Error {
   }
 }
 
+class BreakException {
+}
+
 class TypeError extends Error {
   constructor({operator, operand, expected, message = ''}) {
     super(`Type error at line ${operator.line}: '${operator.lexeme}' expects ${expected} got '${operand}' ${message}`)
@@ -71,6 +74,7 @@ function Interpreter(mode = null) {
   // in mode "repl" visitProgram returns the value of the top level, which might be an expression
   this.environment = new Environment()
   this.mode = mode
+  this.loopLevel = 0
   this.visitProgram = function (p) {
     let r = null
     if (this.mode === "repl") {
@@ -95,10 +99,29 @@ function Interpreter(mode = null) {
     console.log(e) // print e
     return null
   }
-  this.visitWhileStatement = function (w) {
-    while (isTruthy(w.condition.accept(this))) {
-      w.body.accept(this)
+  this.visitBreakStatement = function (b) {
+    if (this.loopLevel === 0) {
+      throw new InterpreterError(b, `break statement outside loop`)
+    } else {
+      throw new BreakException()
     }
+  }
+  this.visitWhileStatement = function (w) {
+    this.loopLevel++
+    let broken = false
+    while (!broken && isTruthy(w.condition.accept(this))) {
+      try {
+	w.body.accept(this)
+      } catch (e) {
+	if (e instanceof BreakException) {
+	  broken = true
+	} else {
+	  throw e
+	}
+      }
+    }
+    // TODO - throw exception if we're at 0
+    this.loopLevel--
     return null
   }
   this.visitBlockStatement = function (b) {
