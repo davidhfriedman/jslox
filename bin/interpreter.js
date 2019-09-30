@@ -103,7 +103,6 @@ function Interpreter(mode = null) {
     if (this.loopLevel === 0) {
       throw new InterpreterError(b, `break statement outside loop`)
     } else {
-      console.log("BREAK!")
       throw new BreakException()
     }
   }
@@ -115,7 +114,6 @@ function Interpreter(mode = null) {
 	w.body.accept(this)
       } catch (e) {
 	if (e instanceof BreakException) {
-	  console.log("Caught a BREAK !")
 	  broken = true
 	} else {
 	  throw e

@@ -202,7 +202,7 @@ Parser.prototype.ifStatement = function () {
     if (this.match(TokenType.ELSE)) {
       whenFalse = this.declaration()
     }
-    return new ifStatement(condition, whenTrue, whenFalse)
+    return new IfStatement(condition, whenTrue, whenFalse)
   }
 }
 

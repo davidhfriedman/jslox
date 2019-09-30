@@ -6,8 +6,10 @@ while (b < 6) {
   while (c < b) {
     print "c";
     print c;
-    if (c > 3)
+    if (c > 2) {
+      print "break";
       break;
+    }
     c = c + 1;  
   }
   print "increment b";

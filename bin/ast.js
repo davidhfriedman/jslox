@@ -104,7 +104,7 @@ const PPrintVisitor = {
   visitProgram: function (p) { return `(program ${p.declarations.map(d => d.accept(this)).join(' ')})` },
   visitVarDeclaration: function (d) { return `(decl ${d.name} ${d.val.accept(this)})` },
   visitBreakStatement: function (b) { return `(break)` },
-  visitWhileStatement: function (w) { return `(while ${b.condition.accept(this)} ${b.body.accept(this)})` },
+  visitWhileStatement: function (w) { return `(while ${w.condition.accept(this)} ${w.body.accept(this)})` },
   visitBlockStatement: function (b) { return `(block ${b.declarations.map(d => d.accept(this)).join(' ')})` },
   visitIfStatement: function (i) {
     return `(if ${i.condition.accept(this)} ${i.then.accept(this)}` +
