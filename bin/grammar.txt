@@ -1,6 +1,8 @@
 program        → declaration* EOF ;
-declaration    → varDeclaration | statement ;
+declaration    → varDeclaration | funDeclaration | statement ;
 varDeclaration → "var" IDENTIFIER ( "=" expression )? ";" ;
+funDeclaration → "fun" IDENTIFIER "(" parameters? ")" block ;
+parameters     → IDENTIFIER ( "," IDENTIFIER ) * ;
 statement      → exprStmt | forStmt | ifStmt | printStmt | whileStmt | breakStmt | block ;
 whileStmt      → "while" "(" expression ")" statement ;
 breakStmt      → "break" ";" ;

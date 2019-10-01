@@ -13,6 +13,14 @@ function VarDeclaration(name, val) {
 
 VarDeclaration.prototype.accept = function (v) { return v.visitVarDeclaration(this) }
 
+function FunDeclaration(name, params, body) {
+  this.name = name
+  this.params = params
+  this.body = body
+}
+
+FunDeclaration.prototype.accept = function (v) { return v.visitFunDeclaration(this) }
+
 function WhileStatement(condition, body) {
   this.condition = condition
   this.body = body
@@ -110,7 +118,9 @@ Variable.prototype.accept = function (v) { return v.visitVariable(this) }
 
 const PPrintVisitor = {
   visitProgram: function (p) { return `(program ${p.declarations.map(d => d.accept(this)).join(' ')})` },
-  visitVarDeclaration: function (d) { return `(decl ${d.name} ${d.val.accept(this)})` },
+  visitFunDeclaration: function (f) { return `(fundec ${f.name} ${f.params.map(p => p.accept(this)).join(',')}
+${f.body.accept(this)})` },
+  visitVarDeclaration: function (d) { return `(vardec ${d.name} ${d.val.accept(this)})` },
   visitBreakStatement: function (b) { return `(break)` },
   visitWhileStatement: function (w) { return `(while ${w.condition.accept(this)} ${w.body.accept(this)})` },
   visitBlockStatement: function (b) { return `(block ${b.declarations.map(d => d.accept(this)).join(' ')})` },
@@ -134,7 +144,7 @@ function pprint(e) {
 }
 
 // TODO: name pprint
-module.exports = { Program, VarDeclaration,
+module.exports = { Program, VarDeclaration, FunDeclaration,
 		   Block, IfStatement, ExpressionStatement, PrintStatement, WhileStatement,
 		   BreakStatement,
 		   Assignment, Logical,

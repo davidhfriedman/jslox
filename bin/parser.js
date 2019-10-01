@@ -1,5 +1,5 @@
 const { TokenType, Token } = require('./token')
-const { Program, VarDeclaration,
+const { Program, VarDeclaration, FunDeclaration,
 	Block, IfStatement, ExpressionStatement, PrintStatement, WhileStatement,
 	BreakStatement,
 	Assignment, Logical,
@@ -86,6 +86,16 @@ Parser.prototype.match = function (...types) {
   return false
 }
 
+Parser.prototype.block = function () {
+  // assumes the opening '{' has been consumed
+  const statements = []
+  while (!this.check(TokenType.RIGHT_BRACE) && !this.atEnd()) {
+    statements.push(this.declaration())
+  }
+  this.consume(TokenType.RIGHT_BRACE, "Expect '}' after block.");
+  return statements
+}
+
 Parser.prototype.program = function () {
   let program = []
   while (!this.atEnd()) {
@@ -97,6 +107,8 @@ Parser.prototype.program = function () {
 Parser.prototype.declaration = function () {
   if (this.match(TokenType.VAR)) {
     return this.varDeclaration()
+  } else if (this.match(TokenType.FUN)) {
+    return this.funDeclaration()
   } else if (this.match(TokenType.FOR)) {
     return this.forStatement()
   } else if (this.match(TokenType.IF)) {
@@ -112,6 +124,28 @@ Parser.prototype.declaration = function () {
   } else {
     return this.expressionStatement()
   }
+}
+
+Parser.prototype.funDeclaration = function () {
+  let name = this.consume(TokenType.IDENTIFIER, "Expect function name.")
+  this.consume(TokenType.LEFT_PAREN, "Expect '(' after function name.")
+  const parms = []
+  if (!this.check(TokenType.RIGHT_PAREN)) {
+    do {
+      if (parms.length >= 255) {
+	// report error and ignore the excess parameters, but do not throw an error
+	// because the parser state is still clear: we know where we are in the grammar
+	// and can continue parsing.
+	this.error(this.peek(), "Cannot have more that 255 parameters.")
+      }
+      parms.push(this.consume(TokenType.IDENTIFIER, "Expect parameter name."))
+    } while (this.match(TokenType.COMMA))
+  }
+  this.consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters.")
+  this.consume(TokenType.LEFT_BRACE, "Expect '{' before function body.")
+  const body = this.block()
+  return new FunDeclaration(name, parms, body)
+  
 }
 
 Parser.prototype.varDeclaration = function () {
@@ -141,12 +175,7 @@ Parser.prototype.breakStatement = function () {
 }
 
 Parser.prototype.blockStatement = function () {
-  let statements = []
-  while (!this.check(TokenType.RIGHT_BRACE) && !this.atEnd()) {
-    statements.push(this.declaration())
-  }
-  this.consume(TokenType.RIGHT_BRACE, "Expect '}' after block.");
-  return new Block(statements)
+  return new Block(this.block())
 }
 
 Parser.prototype.forStatement = function () {

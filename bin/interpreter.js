@@ -86,6 +86,9 @@ function Interpreter(mode = null) {
 			       })
   this.mode = mode
   this.loopLevel = 0
+
+  this.isCallable = function (o) { return 'arity' in o && 'call' in o }
+
   this.visitProgram = function (p) {
     let r = null
     if (this.mode === "repl") {
@@ -95,6 +98,20 @@ function Interpreter(mode = null) {
       p.declarations.forEach(d => d.accept(this))
     }
     return r
+  }
+  this.visitFunDeclaration = function (f) {
+    const func = {
+      decl: f,
+      arity: function() { return this.decl.params.length },
+      toString: function() { return `<fn '${this.decl.name.lexeme}>` },
+      call: function(interpreter, args) {
+	const env = new Environment(interpreter.globals)
+	this.decl.params.forEach((p,i) => env.define(p.lexeme, args[i]))
+	interpreter.interpretBlock(env, this.decl.body)
+      }
+    }
+    this.environment.define(f.name.lexeme, func)
+    return null
   }
   this.visitVarDeclaration = function (d) {
     let e
@@ -138,19 +155,22 @@ function Interpreter(mode = null) {
     this.loopLevel--
     return null
   }
-  this.visitBlockStatement = function (b) {
-    // TODO: passing an env parm via the accept method would be more elegant
-    // console.log("BLOCK entry", this.environment) // TEST
+  this.interpretBlock = function(env, block) {
     let prevEnv = this.environment
     try {
-      this.environment = new Environment(this.environment)
+      this.environment = new Environment(env)
       // console.log("BLOCK new env", this.environment) // TEST
-      b.declarations.forEach(d => { d.accept(this) } )
+      block.forEach(d => { d.accept(this) } )
       return null
     } finally {
       this.environment = prevEnv
       // console.log("BLOCK finally", this.environment) // TEST
     }
+  }
+  this.visitBlockStatement = function (b) {
+    // TODO: passing an env parm via the accept method would be more elegant
+    // console.log("BLOCK entry", this.environment) // TEST
+    this.interpretBlock(this.environment, b.declarations)
   }
   this.visitIfStatement = function (i) {
     let e = i.condition.accept(this)
@@ -195,7 +215,6 @@ function Interpreter(mode = null) {
     }
     return e
   }
-  this.isCallable = function (o) { return 'arity' in o && 'call' in o }
   this.visitCall = function (c) {
     const callee = c.callee.accept(this)
     const args = c.args.map(a => a.accept(this))
