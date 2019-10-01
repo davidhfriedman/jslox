@@ -3,7 +3,7 @@ const { Program, VarDeclaration,
 	Block, IfStatement, ExpressionStatement, PrintStatement, WhileStatement,
 	BreakStatement,
 	Assignment, Logical,
-	Literal, Grouping, Unary, Binary, Variable } = require('./ast')
+	Literal, Grouping, Unary, Call, Binary, Variable } = require('./ast')
 const { report, hadError } = require('./errors')
 
 function Parser(tokens) {
@@ -24,7 +24,7 @@ Parser.prototype.atEnd = function () {
 }
 
 Parser.prototype.advance = function () {
-  if (!this.atEnd()) { this.current++ }
+  if (!this.atEnd()) { return this.tokens[this.current++] }
   else { return this.previous() }
 }
 
@@ -308,8 +308,29 @@ Parser.prototype.unary = function () {
     const right = this.unary()
     return new Unary(operator, right)
   } else {
-    return this.primary()
+    return this.call()
   }
+}
+
+Parser.prototype.call = function () {
+  let expr = this.primary()
+  while (this.match(TokenType.LEFT_PAREN)) {
+    const args = []
+    if (!this.check(TokenType.RIGHT_PAREN)) {
+      do {
+	if (args.length >= 255) {
+	  // report error and ignore the excess arguments, but do not throw an error
+	  // because the parser state is still clear: we know where we are in the grammar
+	  // and can continue parsing.
+	  this.error(this.peek(), "Cannot have more that 255 arguments.")
+	}
+	args.push(this.expression())
+      } while (this.match(TokenType.COMMA))
+    }
+    const close = this.consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.")
+    expr = new Call(expr, args, close)
+  }
+  return expr;
 }
 
 Parser.prototype.primary = function () {

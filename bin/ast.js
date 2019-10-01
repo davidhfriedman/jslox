@@ -85,6 +85,14 @@ function Unary(operator, expr) {
 
 Unary.prototype.accept = function (v) { return v.visitUnary(this) }
 
+function Call(callee, args, closing_paren) {
+  this.callee = callee
+  this.args = args // a JavaScript list
+  this.closing_paren = closing_paren // a token. use its line number to report run-time errors
+}
+
+Call.prototype.accept = function (v) { return v.visitCall(this) }
+
 function Binary(left, operator, right) {
   this.left = left
   this.operator = operator
@@ -116,6 +124,7 @@ const PPrintVisitor = {
   visitLiteral: function (l) { return `${l.val ? l.val : 'nil'}` },
   visitGrouping: function (g) { return `(group ${g.expr.accept(this)})` },
   visitUnary: function (u) { return `(${u.operator.lexeme} ${u.expr.accept(this)})` },
+  visitCall: function (c) { return `(call ${c.callee.accept(this)} ${c.args.map(a => a.accept(this)).join(',')} ${c.closing_paren.line})` },
   visitBinary: function (b) { return `(${b.operator.lexeme} ${b.left.accept(this)} ${b.right.accept(this)})` },
   visitVariable: function (v) { return `(var ${v.name} ${v.value}` }
 }
@@ -129,6 +138,6 @@ module.exports = { Program, VarDeclaration,
 		   Block, IfStatement, ExpressionStatement, PrintStatement, WhileStatement,
 		   BreakStatement,
 		   Assignment, Logical,
-		   Literal, Grouping, Unary, Binary, Variable,
+		   Literal, Grouping, Unary, Call, Binary, Variable,
 		   pprint }
 

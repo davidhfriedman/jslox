@@ -1,6 +1,7 @@
 const { TokenType, Token } = require('./token')
 const { pprint } = require('./ast')
 const { Environment } = require('./environment')
+const { report } = require('./errors')
 
 const error = function(token, message) {
   report(token.line, ` at '${token.lexeme}' ${message}`)
@@ -70,9 +71,19 @@ function typeCheckNumbersOrStrings(operator, left, right) {
   }
 }
 
+/* Interface Callable { arity() {}, call(interpreter, args) {} } */
+
 function Interpreter(mode = null) {
   // in mode "repl" visitProgram returns the value of the top level, which might be an expression
   this.environment = new Environment()
+  this.globals = this.environment
+
+  this.globals.define("clock", { arity: function() { return 0 },
+				 call: function(interpreter, args) {
+				   return Math.round(Date.now() / 1000)
+				 },
+				 toString: function() { return `<builtin 'clock'>`; }
+			       })
   this.mode = mode
   this.loopLevel = 0
   this.visitProgram = function (p) {
@@ -183,6 +194,18 @@ function Interpreter(mode = null) {
       e = null
     }
     return e
+  }
+  this.isCallable = function (o) { return 'arity' in o && 'call' in o }
+  this.visitCall = function (c) {
+    const callee = c.callee.accept(this)
+    const args = c.args.map(a => a.accept(this))
+    if (!this.isCallable(callee)) {
+      throw error(c.closing_paren, `Can only call functions and classes.`)
+    }
+    if (args.length != callee.arity()) {
+      throw error(c.closing_paren, `Expected ${callee.arity()} arguments but got ${args.length}.`)
+    }
+    return callee.call(this, args)
   }
   this.visitBinary = function (b) {
     // TODO: later, for short circuiting logical operators, don't evaulate right unless needed

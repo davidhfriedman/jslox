@@ -17,7 +17,9 @@ equality       → comparison (( "!=" | "==" ) comparison) * ;
 comparison     → addition (( "<" | "<=" | ">" | ">=" ) addition) * ;
 addition       → multiplication (( "-" | "+" ) multiplication) * ;
 multiplication → unary (( "*" | "/" ) unary) * ;
-unary          → (( "-" | "!" ) unary) | primary ;
+unary          → (( "-" | "!" ) unary) | call ;
+call           → primary ( "(" arguments? ")" )* ;
+arguments      → expression ( "," expression )* ;
 primary        → "false" | "true" | "nil" | NUMBER | STRING | "(" expression ")" | IDENTIFIER ;
 
 
