@@ -103,6 +103,7 @@ function Interpreter(mode = null) {
     if (this.loopLevel === 0) {
       throw new InterpreterError(b, `break statement outside loop`)
     } else {
+      // console.log("BREAK throw exception") // TEST
       throw new BreakException()
     }
   }
@@ -114,8 +115,10 @@ function Interpreter(mode = null) {
 	w.body.accept(this)
       } catch (e) {
 	if (e instanceof BreakException) {
+	  // console.log("WHILE caught break") // TEST
 	  broken = true
 	} else {
+	  // console.log("WHILE caught NON-BREAK", e) // TEST
 	  throw e
 	}
       }
@@ -126,13 +129,16 @@ function Interpreter(mode = null) {
   }
   this.visitBlockStatement = function (b) {
     // TODO: passing an env parm via the accept method would be more elegant
+    // console.log("BLOCK entry", this.environment) // TEST
     let prevEnv = this.environment
     try {
       this.environment = new Environment(this.environment)
+      // console.log("BLOCK new env", this.environment) // TEST
       b.declarations.forEach(d => { d.accept(this) } )
       return null
     } finally {
       this.environment = prevEnv
+      // console.log("BLOCK finally", this.environment) // TEST
     }
   }
   this.visitIfStatement = function (i) {
@@ -248,3 +254,33 @@ function Interpreter(mode = null) {
 
 module.exports = { Interpreter }
 
+/*
+BREAK statement.
+
+I implemented it by allowing break anywhere syntactically; the
+interpreter counts nesting depth incrementing on every while and
+raises a runtime error if it encounters a break when the count is
+zero. The for statement is syntactic sugar so is handled by while;
+if we add new iteration constructs they will have to bump the depth
+count too. This is fragile - it would be an easy bug to fail to
+increment or decrement the count, and there are no safety checks for
+underflow to negative, and I don't know what a reasonable overflow
+check would be - arbitrary nesting depth is an unattractive
+option. It would be preferable to handle break syntactically -
+allowed only in the body of a while by grammar rules - but then
+there would beed to be redudndant grammar rules for statements in a
+loop and not in a loop.
+
+Because the interpreter is implemented by the visitor pattern, the
+only way I could think of to implement the break semantics was by
+throwing an exception in the break function that is caught in the
+while function. (Because a throw searches up the execution stack for
+the most recent catch, the dynamically innermost loop will be exited
+as required by breaks semantics.) I thought about setting an
+interpreter global in the break function that the interpreter while
+loop could check after each statement in the while loop. Perhaps that
+would have been better.
+
+Any local environments within the while loop get released normally,
+by the finally clause in the block statement visitor function.
+*/
