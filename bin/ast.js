@@ -33,6 +33,13 @@ function BreakStatement() {
 
 BreakStatement.prototype.accept = function (v) { return v.visitBreakStatement(this) }
 
+function ReturnStatement(keyword, value) {
+  this.keyword = keyword // keep the token for location in error reporting
+  this.value = value
+}
+
+ReturnStatement.prototype.accept = function (v) { return v.visitReturnStatement(this) }
+
 function Block(declarations) {
   this.declarations = declarations
 }
@@ -122,6 +129,7 @@ const PPrintVisitor = {
 ${f.body.accept(this)})` },
   visitVarDeclaration: function (d) { return `(vardec ${d.name} ${d.val.accept(this)})` },
   visitBreakStatement: function (b) { return `(break)` },
+  visitReturnStatement: function (r) { return `(return ${r.value.accept(this)})` },
   visitWhileStatement: function (w) { return `(while ${w.condition.accept(this)} ${w.body.accept(this)})` },
   visitBlockStatement: function (b) { return `(block ${b.declarations.map(d => d.accept(this)).join(' ')})` },
   visitIfStatement: function (i) {
@@ -146,7 +154,7 @@ function pprint(e) {
 // TODO: name pprint
 module.exports = { Program, VarDeclaration, FunDeclaration,
 		   Block, IfStatement, ExpressionStatement, PrintStatement, WhileStatement,
-		   BreakStatement,
+		   BreakStatement, ReturnStatement,
 		   Assignment, Logical,
 		   Literal, Grouping, Unary, Call, Binary, Variable,
 		   pprint }

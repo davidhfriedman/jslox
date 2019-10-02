@@ -1,7 +1,7 @@
 const { TokenType, Token } = require('./token')
 const { Program, VarDeclaration, FunDeclaration,
 	Block, IfStatement, ExpressionStatement, PrintStatement, WhileStatement,
-	BreakStatement,
+	BreakStatement, ReturnStatement,
 	Assignment, Logical,
 	Literal, Grouping, Unary, Call, Binary, Variable } = require('./ast')
 const { report, hadError } = require('./errors')
@@ -121,6 +121,8 @@ Parser.prototype.declaration = function () {
     return this.whileStatement()
   } else if (this.match(TokenType.BREAK)) {
     return this.breakStatement()
+  } else if (this.match(TokenType.RETURN)) {
+    return this.returnStatement()
   } else {
     return this.expressionStatement()
   }
@@ -172,6 +174,18 @@ Parser.prototype.whileStatement = function () {
 Parser.prototype.breakStatement = function () {
   this.consume(TokenType.SEMICOLON, "Expect ';' after break statement")
   return new BreakStatement()
+}
+
+Parser.prototype.returnStatement = function () {
+  let keyword = this.previous()
+  let value
+  if (!this.check(TokenType.SEMICOLON)) {
+    value = this.expression()
+  } else {
+    value = new Literal(TokenType.NIL)
+  }
+  this.consume(TokenType.SEMICOLON, "Expect ';' after return statement")
+  return new ReturnStatement(keyword, value)
 }
 
 Parser.prototype.blockStatement = function () {

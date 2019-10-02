@@ -18,6 +18,12 @@ class InterpreterError extends Error {
 class BreakException {
 }
 
+class ReturnException {
+  constructor(value) {
+    this.value = value
+  }
+}
+
 class TypeError extends Error {
   constructor({operator, operand, expected, message = ''}) {
     super(`Type error at line ${operator.line}: '${operator.lexeme}' expects ${expected} got '${operand}' ${message}`)
@@ -86,7 +92,8 @@ function Interpreter(mode = null) {
 			       })
   this.mode = mode
   this.loopLevel = 0
-
+  this.inFunction = false
+  
   this.isCallable = function (o) { return 'arity' in o && 'call' in o }
 
   this.visitProgram = function (p) {
@@ -133,6 +140,17 @@ function Interpreter(mode = null) {
     } else {
       // console.log("BREAK throw exception") // TEST
       throw new BreakException()
+    }
+  }
+  this.visitReturnStatement = function (r) {
+    if (!this.inFunction) {
+      throw new InterpreterError(r, `return statement outside function body`)
+    } else {
+      let value = null
+      if (r.value != null) {
+	value = r.value.accept(this)
+      }
+      throw new ReturnException(value)
     }
   }
   this.visitWhileStatement = function (w) {
@@ -224,7 +242,22 @@ function Interpreter(mode = null) {
     if (args.length != callee.arity()) {
       throw error(c.closing_paren, `Expected ${callee.arity()} arguments but got ${args.length}.`)
     }
-    return callee.call(this, args)
+    this.inFunction = true
+    let returnValue = null
+    try {
+      callee.call(this, args)
+    } catch (e) {
+      if (e instanceof ReturnException) {
+	returnValue = e.value
+	// console.log("Function caught RETURN", e, returnValue) // TEST
+      } else {
+	// console.log("Function caught NON-RETURN", e) // TEST
+	throw e
+      }
+    } finally {
+      this.inFunction = false
+    }
+    return returnValue
   }
   this.visitBinary = function (b) {
     // TODO: later, for short circuiting logical operators, don't evaulate right unless needed
