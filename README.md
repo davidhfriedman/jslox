@@ -35,7 +35,7 @@ For quickie command line tests:
 
 ## wip status
 
-2019-09-30 chapter 9 done, including challenges
+2019-10-02 chapter 10 done, except for anonymous functions challenge
 
 BUG: printf "var; print a;\n" | npm run r is "at ';' Expect expression" but should be "at 'var' Expect variable name"
 

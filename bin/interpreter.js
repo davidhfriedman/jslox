@@ -10,7 +10,7 @@ const error = function(token, message) {
 
 class InterpreterError extends Error {
   constructor(token, message) {
-    super(`${token} ${message}`)
+    super(`${token.line}: '${token.lexeme}' ${message}`)
     this.name = 'InterpreterError'
   }
 }
@@ -94,7 +94,7 @@ function Interpreter(mode = null) {
   this.loopLevel = 0
   this.inFunction = false
   
-  this.isCallable = function (o) { return 'arity' in o && 'call' in o }
+  this.isCallable = function (o) { return o !== null && typeof o === 'object' && 'arity' in o && 'call' in o }
 
   this.visitProgram = function (p) {
     let r = null
@@ -109,10 +109,11 @@ function Interpreter(mode = null) {
   this.visitFunDeclaration = function (f) {
     const func = {
       decl: f,
+      closure: this.environment,
       arity: function() { return this.decl.params.length },
       toString: function() { return `<fn '${this.decl.name.lexeme}>` },
       call: function(interpreter, args) {
-	const env = new Environment(interpreter.globals)
+	const env = new Environment(this.closure)
 	this.decl.params.forEach((p,i) => env.define(p.lexeme, args[i]))
 	interpreter.interpretBlock(env, this.decl.body)
       }
