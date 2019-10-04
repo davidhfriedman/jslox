@@ -315,6 +315,7 @@ function Interpreter(mode = null) {
     return e
   }
   this.visitVariable = function (v) {
+    this.environment.show('visitVariable environment chain');
     // TODO - this is gross. Find a better way.
     let value = this.environment.lookup(v.name.lexeme)
     if (value === undefined) { // meta-value for un-initialzed variable

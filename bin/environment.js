@@ -38,4 +38,20 @@ Environment.prototype.lookup = function(name) {
   throw new UndefinedVariableError(name)
 }
 
+Environment.prototype.show = function(caption, indent = 0) {
+  const i = ' '.repeat(indent)
+  console.log()
+  console.log(caption+':')
+  console.log(i, '<env [')
+  Object.getOwnPropertyNames(this.values).forEach(p =>
+						  console.log(i, '      ', `${p}: ${this.values[p]}`))
+  if (this.enclosing) {
+    console.log(i, '     ] ==>')
+    this.enclosing.show(indent+2)
+  } else {
+    console.log(i, '     ] ==> NIL')
+  }
+  console.log(i, '>\n')
+}
+
 module.exports = { Environment }
