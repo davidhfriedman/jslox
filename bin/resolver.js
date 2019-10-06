@@ -1,7 +1,7 @@
 const { report } = require('./errors')
 
 const error = function(token, message) {
-  report(token.line, ` at '${token.lexeme}' ${message}`)
+  report(token.line, token.lexeme, message)
   return new ResolverError(token, message)
 }
 
@@ -53,6 +53,9 @@ function Resolver(interpreter) {
       return
     }
     const scope = this.scopes.peek()
+    if (scope.hasOwnProperty(name.lexeme)) {
+      error(name, `Variable with this name already declared in this scope.`)
+    }
     scope[name.lexeme] = false // "not ready yet" - declared but not initialized
   }
 
@@ -100,7 +103,7 @@ function Resolver(interpreter) {
 
   this.visitVariable = function (v) {
     if (!this.scopes.empty() && this.scopes.peek()[v.name.lexeme] === false) {
-      error(v.name, `${v.name} Cannot read local variable in its own initializer.`)
+      error(v.name, `Cannot read local variable in its own initializer.`)
     }
     this.resolveLocal(v, v.name)
   }
@@ -123,7 +126,7 @@ function Resolver(interpreter) {
   this.visitIfStatement = function (i) {
     i.condition.accept(this)
     i.then.accept(this)
-    if (i.else !== null) { i.else.accept(this) }
+    if (i.else !== undefined) { i.else.accept(this) }
   }
 
   this.visitPrintStatement = function (p) {
@@ -136,16 +139,19 @@ function Resolver(interpreter) {
     }
   }
 
-  this.visitWhileStatment = function (w) {
+  this.visitWhileStatement = function (w) {
     w.condition.accept(this)
     w.body.accept(this)
+  }
+
+  this.visitBreakStatement = function (w) {
+    // nothing to do, but need it for Visitor
   }
 
   this.visitBinary = function (b) {
     b.left.accept(this)
     b.right.accept(this)
   }
-
 
   this.visitCall = function (c) {
     c.callee.accept(this)

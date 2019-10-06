@@ -28,7 +28,8 @@ function WhileStatement(condition, body) {
 
 WhileStatement.prototype.accept = function (v) { return v.visitWhileStatement(this) }
 
-function BreakStatement() {
+function BreakStatement(keyword) {
+  this.keyword = keyword // keep the token for location in error reporting
 }
 
 BreakStatement.prototype.accept = function (v) { return v.visitBreakStatement(this) }

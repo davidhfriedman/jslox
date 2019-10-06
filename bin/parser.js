@@ -172,8 +172,9 @@ Parser.prototype.whileStatement = function () {
 }
 
 Parser.prototype.breakStatement = function () {
+  let keyword = this.previous()
   this.consume(TokenType.SEMICOLON, "Expect ';' after break statement")
-  return new BreakStatement()
+  return new BreakStatement(keyword)
 }
 
 Parser.prototype.returnStatement = function () {

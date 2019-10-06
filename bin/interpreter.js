@@ -143,14 +143,14 @@ function Interpreter(mode = null) {
   }
   this.visitBreakStatement = function (b) {
     if (this.loopLevel === 0) {
-      throw new InterpreterError(b, `break statement outside loop`)
+      error(b.keyword, `break statement outside loop.`)
     } else {
       throw new BreakException()
     }
   }
   this.visitReturnStatement = function (r) {
     if (!this.inFunction) {
-      throw new InterpreterError(r, `return statement outside function body`)
+      error(r.keyword, `return statement outside function body.`)
     } else {
       let value = null
       if (r.value != null) {

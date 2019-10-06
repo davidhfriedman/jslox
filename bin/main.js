@@ -60,9 +60,12 @@ function run(source, interpreter) {
 	console.log(result) // repl mode echo expression value
       }
     } catch (e) {
-      console.log('in run() : ', e.name, ':', e.message) // error reporting
-      console.log(source) // error reporting
+      // TODO - if e is a Lox error, assume it was handled; if not,
+      // display it because it is probably an interpreter bug.
+      // ALL LOX ERRORS SHOULD DERIVE FROM A PARENT TYPE...
       if (development_mode) {
+	console.log('in run() : ', e.name, ':', e.message) // error reporting
+	console.log(source) // error reporting
 	console.log(e) // dev mode error reporting
       }
       parser.synchronize()
