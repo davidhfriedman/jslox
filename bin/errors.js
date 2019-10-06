@@ -1,8 +1,8 @@
 let errorOccurred = false
 
-function report(line, text) {
+function report(line, where, text) {
   hadError = true
-  console.log(`Error: ${line}, ${text}`)
+  console.log(`[line ${line}] Error at '${where}': ${text}`)
 }
 
 function hadError(val = undefined) {
