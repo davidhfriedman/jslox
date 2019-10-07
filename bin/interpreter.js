@@ -124,6 +124,15 @@ function Interpreter(mode = null) {
     this.environment.define(f.name.lexeme, func)
     return null
   }
+  this.visitClassDeclaration = function (c) {
+    this.environment.define(c.name.lexeme, null)
+    const clss = {
+      name: c.name.lexeme,
+      toString: function() { return this.name }
+    }
+    this.environment.assign(c.name, clss)
+    return null
+  }
   this.visitVarDeclaration = function (d) {
     let e
     if (d.val) {
@@ -135,7 +144,7 @@ function Interpreter(mode = null) {
   }
   this.visitPrintStatement = function (s) {
     let e = s.expr.accept(this)
-    console.log(e) // print e
+    console.log(e && e.toString ? e.toString() : e) // print e
     return null
   }
   this.visitBreakStatement = function (b) {

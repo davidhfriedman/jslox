@@ -125,6 +125,11 @@ function Resolver(interpreter) {
     this.resolveFunction(f)
   }
 
+  this.visitClassDeclaration = function (c) {
+    this.declare(c.name)
+    this.define(c.name)
+  }
+
   this.visitExpressionStatement = function (e) {
     e.expr.accept(this)
   }

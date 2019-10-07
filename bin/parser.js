@@ -1,5 +1,5 @@
 const { TokenType, Token } = require('./token')
-const { Program, VarDeclaration, FunDeclaration,
+const { Program, VarDeclaration, FunDeclaration, ClassDeclaration,
 	Block, IfStatement, ExpressionStatement, PrintStatement, WhileStatement,
 	BreakStatement, ReturnStatement,
 	Assignment, Logical,
@@ -107,6 +107,8 @@ Parser.prototype.program = function () {
 Parser.prototype.declaration = function () {
   if (this.match(TokenType.VAR)) {
     return this.varDeclaration()
+  } else if (this.match(TokenType.CLASS)) {
+    return this.classDeclaration()
   } else if (this.match(TokenType.FUN)) {
     return this.funDeclaration()
   } else if (this.match(TokenType.FOR)) {
@@ -147,6 +149,18 @@ Parser.prototype.funDeclaration = function () {
   this.consume(TokenType.LEFT_BRACE, "Expect '{' before function body.")
   const body = this.block()
   return new FunDeclaration(name, parms, body)
+  
+}
+
+Parser.prototype.classDeclaration = function () {
+  let name = this.consume(TokenType.IDENTIFIER, "Expect class name.")
+  this.consume(TokenType.LEFT_BRACE, "Expect '{' before class body.")
+  const methods = []
+  while (!this.check(TokenType.RIGHT_BRACE) && !this.atEnd()) {
+    methods.push(this.funDeclaration())
+  }
+  this.consume(TokenType.RIGHT_BRACE, "Expect '}' after class body.")
+  return new ClassDeclaration(name, methods)
   
 }
 
