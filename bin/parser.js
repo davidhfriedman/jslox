@@ -35,9 +35,9 @@ Parser.prototype.consume = function(type, message) {
 
 Parser.prototype.error = function(token, message) {
   if (token.type === TokenType.EOF) {
-    report(token.line, ` at end ${message}`)
+    report(token.line, 'at end', message)
   } else {
-    report(token.line, ` at '${token.lexeme}' ${message}`)
+    report(token.line, token.lexeme, message)
   }
   hadError(true)
   return new ParseError(token, message)
@@ -172,8 +172,9 @@ Parser.prototype.whileStatement = function () {
 }
 
 Parser.prototype.breakStatement = function () {
+  let keyword = this.previous()
   this.consume(TokenType.SEMICOLON, "Expect ';' after break statement")
-  return new BreakStatement()
+  return new BreakStatement(keyword)
 }
 
 Parser.prototype.returnStatement = function () {
@@ -271,7 +272,7 @@ Parser.prototype.assignment = function () {
     let lval = this.previous()
     let value = this.assignment()
     if (expression instanceof Variable) {
-      let name = expression.name.lexeme
+      let name = expression.name
       return new Assignment(name, value)
     }
     return this.error(lval, "Invalid assignment target.")

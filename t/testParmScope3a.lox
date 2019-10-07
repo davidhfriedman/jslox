@@ -1,0 +1,16 @@
+fun outer () {
+  fun scope(a) {
+    fun inner() {
+      print a;
+    }
+    var a = "local";
+    print a;
+    return inner;
+  }
+  return scope;
+}
+
+var g = outer();
+var f = g(19); // print "local"
+f(); // print "local" - I expected 19
+

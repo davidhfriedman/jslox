@@ -5,6 +5,7 @@ const readline = require('readline')
 const { TokenType, Token } = require('./token')
 const Scanner = require('./scanner')
 const Parser = require('./parser')
+const Resolver = require('./resolver')
 // TODO: name pprint
 const { pprint } = require('./ast')
 const { Interpreter } = require('./interpreter')
@@ -40,16 +41,6 @@ function main() {
   return 0
 }
 
-// TODO these are in errors.js now
-function error(line, message) {                       
-  report(line, "", message)
-}
-
-function report(line, where, message) {
-  console.log(`[line ${line}] Error ${where}: ${message}`)
-  hadError(true)
-}
-
 function run(source, interpreter) {
   hadError(false)
   const scanner = new Scanner(source)
@@ -60,15 +51,21 @@ function run(source, interpreter) {
     if (!development_mode) {
       if (hadError()) { return }
     }
+    const resolver = new Resolver(interpreter)
+    resolver.resolve(expression)
+    if (hadError()) { return }
     try {
       const result = interpreter.interpret(expression)
       if (interpreter.mode === "repl") {
 	console.log(result) // repl mode echo expression value
       }
     } catch (e) {
-      console.log('in run() : ', e.name, ':', e.message) // error reporting
-      console.log(source) // error reporting
+      // TODO - if e is a Lox error, assume it was handled; if not,
+      // display it because it is probably an interpreter bug.
+      // ALL LOX ERRORS SHOULD DERIVE FROM A PARENT TYPE...
       if (development_mode) {
+	console.log('in run() : ', e.name, ':', e.message) // error reporting
+	console.log(source) // error reporting
 	console.log(e) // dev mode error reporting
       }
       parser.synchronize()

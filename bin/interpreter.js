@@ -4,7 +4,7 @@ const { Environment } = require('./environment')
 const { report } = require('./errors')
 
 const error = function(token, message) {
-  report(token.line, ` at '${token.lexeme}' ${message}`)
+  report(token.line, token.lexeme, message)
   return new InterpreterError(token, message)
 }
 
@@ -83,7 +83,12 @@ function Interpreter(mode = null) {
   // in mode "repl" visitProgram returns the value of the top level, which might be an expression
   this.environment = new Environment()
   this.globals = this.environment
-
+  // 'locals' is a map from an ast node to the contour depth (distance
+  // from current environment to encosing environment in which to find
+  // variable binding, calculated by resolver static semantic analysis
+  // pass
+  this.locals = new Map()
+  
   this.globals.define("clock", { arity: function() { return 0 },
 				 call: function(interpreter, args) {
 				   return Math.round(Date.now() / 1000)
@@ -91,9 +96,7 @@ function Interpreter(mode = null) {
 				 toString: function() { return `<builtin 'clock'>`; }
 			       })
   this.mode = mode
-  this.loopLevel = 0
-  this.inFunction = false
-  
+
   this.isCallable = function (o) { return o !== null && typeof o === 'object' && 'arity' in o && 'call' in o }
 
   this.visitProgram = function (p) {
@@ -111,7 +114,7 @@ function Interpreter(mode = null) {
       decl: f,
       closure: this.environment,
       arity: function() { return this.decl.params.length },
-      toString: function() { return `<fn '${this.decl.name.lexeme}>` },
+      toString: function() { return `<fn '${this.decl.name.lexeme}'>` },
       call: function(interpreter, args) {
 	const env = new Environment(this.closure)
 	this.decl.params.forEach((p,i) => env.define(p.lexeme, args[i]))
@@ -136,60 +139,45 @@ function Interpreter(mode = null) {
     return null
   }
   this.visitBreakStatement = function (b) {
-    if (this.loopLevel === 0) {
-      throw new InterpreterError(b, `break statement outside loop`)
-    } else {
-      // console.log("BREAK throw exception") // TEST
-      throw new BreakException()
-    }
+    // resolver ensures break only inside loop
+    throw new BreakException()
   }
   this.visitReturnStatement = function (r) {
-    if (!this.inFunction) {
-      throw new InterpreterError(r, `return statement outside function body`)
-    } else {
-      let value = null
-      if (r.value != null) {
-	value = r.value.accept(this)
-      }
-      throw new ReturnException(value)
+    // Resolver ensures return only from function body
+    let value = null
+    if (r.value != null) {
+      value = r.value.accept(this)
     }
+    throw new ReturnException(value)
   }
   this.visitWhileStatement = function (w) {
-    this.loopLevel++
     let broken = false
     while (!broken && isTruthy(w.condition.accept(this))) {
       try {
 	w.body.accept(this)
       } catch (e) {
 	if (e instanceof BreakException) {
-	  // console.log("WHILE caught break") // TEST
 	  broken = true
 	} else {
-	  // console.log("WHILE caught NON-BREAK", e) // TEST
 	  throw e
 	}
       }
     }
-    // TODO - throw exception if we're at 0
-    this.loopLevel--
     return null
   }
   this.interpretBlock = function(env, block) {
     let prevEnv = this.environment
     try {
-      this.environment = new Environment(env)
-      // console.log("BLOCK new env", this.environment) // TEST
+      this.environment = env
       block.forEach(d => { d.accept(this) } )
       return null
     } finally {
       this.environment = prevEnv
-      // console.log("BLOCK finally", this.environment) // TEST
     }
   }
   this.visitBlockStatement = function (b) {
     // TODO: passing an env parm via the accept method would be more elegant
-    // console.log("BLOCK entry", this.environment) // TEST
-    this.interpretBlock(this.environment, b.declarations)
+    this.interpretBlock(new Environment(this.environment), b.declarations)
   }
   this.visitIfStatement = function (i) {
     let e = i.condition.accept(this)
@@ -207,7 +195,12 @@ function Interpreter(mode = null) {
   }
   this.visitAssignment = function (a) {
     let v = a.value.accept(this)
-    this.environment.assign(a.name, v)
+    let distance = this.locals.get(a)
+    if (distance != undefined) {
+      this.environment.assignAt(distance, a.name, v)
+    } else {
+      this.globals.assign(a.name, v)
+    }
     return v
   }
   this.visitLogical = function (l) {
@@ -243,20 +236,15 @@ function Interpreter(mode = null) {
     if (args.length != callee.arity()) {
       throw error(c.closing_paren, `Expected ${callee.arity()} arguments but got ${args.length}.`)
     }
-    this.inFunction = true
     let returnValue = null
     try {
       callee.call(this, args)
     } catch (e) {
       if (e instanceof ReturnException) {
 	returnValue = e.value
-	// console.log("Function caught RETURN", e, returnValue) // TEST
       } else {
-	// console.log("Function caught NON-RETURN", e) // TEST
 	throw e
       }
-    } finally {
-      this.inFunction = false
     }
     return returnValue
   }
@@ -315,48 +303,24 @@ function Interpreter(mode = null) {
     return e
   }
   this.visitVariable = function (v) {
-    // TODO - this is gross. Find a better way.
-    let value = this.environment.lookup(v.name.lexeme)
-    if (value === undefined) { // meta-value for un-initialzed variable
-      throw new UninitializedVariableReferenceError(v.name)
+    const distance = this.locals.get(v)
+    if (distance != undefined) {
+      return this.environment.lookupAt(distance, v.name.lexeme)
     } else {
-      return value
+      return this.globals.lookup(v.name.lexeme)
     }
   }
+  this.resolve = function (expr, depth) {
+    // interface for the variable resolution semantic analysis pass
+    // the token is a variable or assignment expression
+    // store the number of environments between the current and the
+    // enclosing at which to find the value
+    this.locals.set(expr, depth)
+  }
+
   this.interpret = function (e) {
     return e.accept(this)
   }
 }
 
 module.exports = { Interpreter }
-
-/*
-BREAK statement.
-
-I implemented it by allowing break anywhere syntactically; the
-interpreter counts nesting depth incrementing on every while and
-raises a runtime error if it encounters a break when the count is
-zero. The for statement is syntactic sugar so is handled by while;
-if we add new iteration constructs they will have to bump the depth
-count too. This is fragile - it would be an easy bug to fail to
-increment or decrement the count, and there are no safety checks for
-underflow to negative, and I don't know what a reasonable overflow
-check would be - arbitrary nesting depth is an unattractive
-option. It would be preferable to handle break syntactically -
-allowed only in the body of a while by grammar rules - but then
-there would beed to be redudndant grammar rules for statements in a
-loop and not in a loop.
-
-Because the interpreter is implemented by the visitor pattern, the
-only way I could think of to implement the break semantics was by
-throwing an exception in the break function that is caught in the
-while function. (Because a throw searches up the execution stack for
-the most recent catch, the dynamically innermost loop will be exited
-as required by breaks semantics.) I thought about setting an
-interpreter global in the break function that the interpreter while
-loop could check after each statement in the while loop. Perhaps that
-would have been better.
-
-Any local environments within the while loop get released normally,
-by the finally clause in the block statement visitor function.
-*/

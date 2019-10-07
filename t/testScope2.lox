@@ -1,0 +1,28 @@
+var a = "global";
+{
+  fun showA(q) {
+    print q;
+    print a;
+  }
+
+  showA(1);
+  var a = "block";
+  showA(2);
+}
+
+// result:
+
+// global
+// block
+
+// should be
+
+// global
+// global
+
+// because a closure should capture the scope in effect at definition time
+// but our closures capture only a pointer to the environment, and the
+// environment is mutable. the environment in which showA is declared gets
+// augmented with a new binding of a. The second call to showA finds that
+// new inner a binding rather than continuing up the environment chain to
+// find the outer global a.

@@ -1,0 +1,9 @@
+while (true) {
+  break;
+}
+
+if (true) {
+  break;
+}
+
+break;
