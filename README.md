@@ -20,7 +20,7 @@ false
 ### Debugging and testing
 
 There are some test files in t/ but they don't keep up with the grammar problems.
-A proper test suite is on the TODO list...
+Running Nystrom's test suite is on the TODO list...
 
 For quickie command line tests:
 
@@ -35,9 +35,8 @@ For quickie command line tests:
 
 ## wip status
 
+2019-10-02 chapter 11 done, except for challenges
 2019-10-02 chapter 10 done, except for anonymous functions challenge
 
 BUG: printf "var; print a;\n" | npm run r is "at ';' Expect expression" but should be "at 'var' Expect variable name"
-
-TODO: Undefined varible error doesn't give the line number, because it is thrown within Environment which doesb't have the token
-
+BUG: printf "print a;\n" | npm run r is silent, -d had UndefinedVariableError. jlox gives a resolver error
