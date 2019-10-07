@@ -39,6 +39,8 @@ function Stack() {
 function Resolver(interpreter) {
   this.interpreter = interpreter
   this.scopes = new Stack()
+  this.inFunction = false
+  this.loopLevel = 0
   
   this.beginScope = function () {
     this.scopes.push({})
@@ -78,6 +80,9 @@ function Resolver(interpreter) {
   }
 
   this.resolveFunction = function (f) {
+    // TODO - don't we need a try/finally to restore this.inFunction?
+    let prevInFunction = this.inFunction
+    this.inFunction = true
     this.beginScope()
     f.params.forEach(p => {
       this.declare(p)
@@ -85,6 +90,7 @@ function Resolver(interpreter) {
     })
     f.body.forEach(s => s.accept(this))
     this.endScope()
+    this.inFunction = prevInFunction
   }
   
   this.visitBlockStatement = function (b) {
@@ -134,18 +140,26 @@ function Resolver(interpreter) {
   }
 
   this.visitReturnStatement = function (r) {
+    if (this.inFunction === false) {
+      error(r.keyword, `Cannot return from top-level code.`)
+    }
     if (r.value !== null) {
       r.value.accept(this)
     }
   }
 
   this.visitWhileStatement = function (w) {
+    let prevLoopLevel = this.loopLevel
+    this.loopLevel++
     w.condition.accept(this)
     w.body.accept(this)
+    this.loopLevel = prevLoopLevel
   }
 
-  this.visitBreakStatement = function (w) {
-    // nothing to do, but need it for Visitor
+  this.visitBreakStatement = function (b) {
+    if (this.loopLevel === 0) {
+      error(b.keyword, `Break must be inside a loop`)
+    }
   }
 
   this.visitBinary = function (b) {

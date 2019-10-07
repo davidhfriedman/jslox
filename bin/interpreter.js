@@ -96,9 +96,7 @@ function Interpreter(mode = null) {
 				 toString: function() { return `<builtin 'clock'>`; }
 			       })
   this.mode = mode
-  this.loopLevel = 0
-  this.inFunction = false
-  
+
   this.isCallable = function (o) { return o !== null && typeof o === 'object' && 'arity' in o && 'call' in o }
 
   this.visitProgram = function (p) {
@@ -133,7 +131,6 @@ function Interpreter(mode = null) {
     }
     // TODO - this is gross. Find a better way.
     this.environment.define(d.name.lexeme, e)
-    //this.environment.show('VARDEC')
     return null
   }
   this.visitPrintStatement = function (s) {
@@ -142,25 +139,18 @@ function Interpreter(mode = null) {
     return null
   }
   this.visitBreakStatement = function (b) {
-    if (this.loopLevel === 0) {
-      error(b.keyword, `break statement outside loop.`)
-    } else {
-      throw new BreakException()
-    }
+    // resolver ensures break only inside loop
+    throw new BreakException()
   }
   this.visitReturnStatement = function (r) {
-    if (!this.inFunction) {
-      error(r.keyword, `return statement outside function body.`)
-    } else {
-      let value = null
-      if (r.value != null) {
-	value = r.value.accept(this)
-      }
-      throw new ReturnException(value)
+    // Resolver ensures return only from function body
+    let value = null
+    if (r.value != null) {
+      value = r.value.accept(this)
     }
+    throw new ReturnException(value)
   }
   this.visitWhileStatement = function (w) {
-    this.loopLevel++
     let broken = false
     while (!broken && isTruthy(w.condition.accept(this))) {
       try {
@@ -173,8 +163,6 @@ function Interpreter(mode = null) {
 	}
       }
     }
-    // TODO - throw exception if we're at 0
-    this.loopLevel--
     return null
   }
   this.interpretBlock = function(env, block) {
@@ -210,10 +198,8 @@ function Interpreter(mode = null) {
     let distance = this.locals.get(a)
     if (distance != undefined) {
       this.environment.assignAt(distance, a.name, v)
-      // testing this.environment.show()
     } else {
       this.globals.assign(a.name, v)
-      // testing this.globals.show('VISIT ASSIGN GLOBAL after')
     }
     return v
   }
@@ -250,7 +236,6 @@ function Interpreter(mode = null) {
     if (args.length != callee.arity()) {
       throw error(c.closing_paren, `Expected ${callee.arity()} arguments but got ${args.length}.`)
     }
-    this.inFunction = true
     let returnValue = null
     try {
       callee.call(this, args)
@@ -260,8 +245,6 @@ function Interpreter(mode = null) {
       } else {
 	throw e
       }
-    } finally {
-      this.inFunction = false
     }
     return returnValue
   }
@@ -341,34 +324,3 @@ function Interpreter(mode = null) {
 }
 
 module.exports = { Interpreter }
-
-/*
-BREAK statement.
-
-I implemented it by allowing break anywhere syntactically; the
-interpreter counts nesting depth incrementing on every while and
-raises a runtime error if it encounters a break when the count is
-zero. The for statement is syntactic sugar so is handled by while;
-if we add new iteration constructs they will have to bump the depth
-count too. This is fragile - it would be an easy bug to fail to
-increment or decrement the count, and there are no safety checks for
-underflow to negative, and I don't know what a reasonable overflow
-check would be - arbitrary nesting depth is an unattractive
-option. It would be preferable to handle break syntactically -
-allowed only in the body of a while by grammar rules - but then
-there would beed to be redudndant grammar rules for statements in a
-loop and not in a loop.
-
-Because the interpreter is implemented by the visitor pattern, the
-only way I could think of to implement the break semantics was by
-throwing an exception in the break function that is caught in the
-while function. (Because a throw searches up the execution stack for
-the most recent catch, the dynamically innermost loop will be exited
-as required by breaks semantics.) I thought about setting an
-interpreter global in the break function that the interpreter while
-loop could check after each statement in the while loop. Perhaps that
-would have been better.
-
-Any local environments within the while loop get released normally,
-by the finally clause in the block statement visitor function.
-*/

@@ -1,7 +1,7 @@
 let errorOccurred = false
 
 function report(line, where, text) {
-  hadError = true
+  errorOccurred = true
   console.log(`[line ${line}] Error at '${where}': ${text}`)
 }
 
