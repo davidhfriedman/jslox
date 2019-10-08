@@ -79,6 +79,13 @@ function typeCheckNumbersOrStrings(operator, left, right) {
 
 /* Interface Callable { arity() {}, call(interpreter, args) {} } */
 
+function CreateInstance (clss) {
+  return {
+    "class": clss,
+    toString: function () { return `<${this["class"]} instance>` }
+  }
+}
+
 function Interpreter(mode = null) {
   // in mode "repl" visitProgram returns the value of the top level, which might be an expression
   this.environment = new Environment()
@@ -88,7 +95,11 @@ function Interpreter(mode = null) {
   // variable binding, calculated by resolver static semantic analysis
   // pass
   this.locals = new Map()
-  
+
+  // user-defined functions return null or a return value via an exception
+  // built-ins just return their value. they could throw an exception for
+  // consistency with function calls, but classes return instances so we
+  // have that pathway for return values already.
   this.globals.define("clock", { arity: function() { return 0 },
 				 call: function(interpreter, args) {
 				   return Math.round(Date.now() / 1000)
@@ -119,6 +130,7 @@ function Interpreter(mode = null) {
 	const env = new Environment(this.closure)
 	this.decl.params.forEach((p,i) => env.define(p.lexeme, args[i]))
 	interpreter.interpretBlock(env, this.decl.body)
+	return null
       }
     }
     this.environment.define(f.name.lexeme, func)
@@ -127,6 +139,11 @@ function Interpreter(mode = null) {
   this.visitClassDeclaration = function (c) {
     this.environment.define(c.name.lexeme, null)
     const clss = {
+      arity: function() { return 0 },
+      call: function(interpreter) {
+	const instance = new CreateInstance(this)
+	return instance
+      },
       name: c.name.lexeme,
       toString: function() { return this.name }
     }
@@ -245,9 +262,11 @@ function Interpreter(mode = null) {
     if (args.length != callee.arity()) {
       throw error(c.closing_paren, `Expected ${callee.arity()} arguments but got ${args.length}.`)
     }
-    let returnValue = null
+    let returnValue
+    // if callee is a class, it will return an instance.
+    // if callee is a function, it will return null if there is no return statement
     try {
-      callee.call(this, args)
+      returnValue = callee.call(this, args)
     } catch (e) {
       if (e instanceof ReturnException) {
 	returnValue = e.value

@@ -1,0 +1,5 @@
+fun f() { }
+class Baygull {}
+var bagel = Baygull();
+print bagel; // expect: "<Baygull instance>"
+print f();
