@@ -1,0 +1,5 @@
+class cake {}
+var c = cake();
+print c;
+// print cake.frosting; NOT AN INSTANCE
+print c.frosting;

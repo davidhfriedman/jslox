@@ -3,7 +3,7 @@ const { Program, VarDeclaration, FunDeclaration, ClassDeclaration,
 	Block, IfStatement, ExpressionStatement, PrintStatement, WhileStatement,
 	BreakStatement, ReturnStatement,
 	Assignment, Logical,
-	Literal, Grouping, Unary, Call, Binary, Variable } = require('./ast')
+	Literal, Grouping, Unary, Call, Binary, Variable, GetterExpression } = require('./ast')
 const { report, hadError } = require('./errors')
 
 function Parser(tokens) {
@@ -372,21 +372,28 @@ Parser.prototype.unary = function () {
 
 Parser.prototype.call = function () {
   let expr = this.primary()
-  while (this.match(TokenType.LEFT_PAREN)) {
-    const args = []
-    if (!this.check(TokenType.RIGHT_PAREN)) {
-      do {
-	if (args.length >= 255) {
-	  // report error and ignore the excess arguments, but do not throw an error
-	  // because the parser state is still clear: we know where we are in the grammar
-	  // and can continue parsing.
-	  this.error(this.peek(), "Cannot have more that 255 arguments.")
-	}
-	args.push(this.expression())
-      } while (this.match(TokenType.COMMA))
+  while (true) {
+    if (this.match(TokenType.LEFT_PAREN)) {
+      const args = []
+      if (!this.check(TokenType.RIGHT_PAREN)) {
+	do {
+	  if (args.length >= 255) {
+	    // report error and ignore the excess arguments, but do not throw an error
+	    // because the parser state is still clear: we know where we are in the grammar
+	    // and can continue parsing.
+	    this.error(this.peek(), "Cannot have more that 255 arguments.")
+	  }
+	  args.push(this.expression())
+	} while (this.match(TokenType.COMMA))
+      }
+      const close = this.consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.")
+      expr = new Call(expr, args, close)
+    } else if (this.match(TokenType.DOT)) {
+      const name = this.consume(TokenType.IDENTIFIER, "Expect property name after '.'.")
+      expr = new GetterExpression(expr, name)
+    } else {
+      break
     }
-    const close = this.consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.")
-    expr = new Call(expr, args, close)
   }
   return expr;
 }

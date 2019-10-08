@@ -177,6 +177,10 @@ function Resolver(interpreter) {
     c.args.forEach(a => a.accept(this))
   }
 
+  this.visitGetterExpression = function (g) {
+    g.object.accept(this)
+  }
+  
   this.visitGrouping = function (g) {
     g.expr.accept(this)
   }

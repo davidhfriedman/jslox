@@ -77,13 +77,36 @@ function typeCheckNumbersOrStrings(operator, left, right) {
   }
 }
 
-/* Interface Callable { arity() {}, call(interpreter, args) {} } */
+const LoxInstance = function (clss) {
+  this["class"] = clss // an instance of LoxClass
+  this.fields = {}
+}
+
+LoxInstance.prototype.toString = function () { return `<${this["class"].name} instance>` }
+LoxInstance.prototype.get = function(propToken) {
+  const prop = propToken.lexeme
+  if (this.fields.hasOwnProperty(prop)) {
+    return this.fields[prop]
+  }
+  throw error(propToken, `Undefined property '${prop}'.`)
+}
+
+const LoxClass = function (name, arity) {
+  this.name = name
+  this.arity_ = arity // property has _ name collides with method arity()
+}
+
+LoxClass.prototype.arity = function() { return this.arity_ }
+LoxClass.prototype.call = function(interpreter) {
+  return new LoxInstance(this)
+}
+LoxClass.prototype.toString = function() { return `<class '${this.name}'>` }
+
 
 function CreateInstance (clss) {
-  return {
-    "class": clss,
-    toString: function () { return `<${this["class"]} instance>` }
-  }
+  const i = Object.create(Instance)
+  i["class"] = clss
+  return i
 }
 
 function Interpreter(mode = null) {
@@ -138,15 +161,7 @@ function Interpreter(mode = null) {
   }
   this.visitClassDeclaration = function (c) {
     this.environment.define(c.name.lexeme, null)
-    const clss = {
-      arity: function() { return 0 },
-      call: function(interpreter) {
-	const instance = new CreateInstance(this)
-	return instance
-      },
-      name: c.name.lexeme,
-      toString: function() { return this.name }
-    }
+    const clss = new LoxClass(c.name.lexeme, 0)
     this.environment.assign(c.name, clss)
     return null
   }
@@ -275,6 +290,14 @@ function Interpreter(mode = null) {
       }
     }
     return returnValue
+  }
+  this.visitGetterExpression = function (g) {
+    const obj = g.object.accept(this)
+    if (obj instanceof LoxInstance) {
+      return obj.get(g.name)
+    } else {
+      throw error(g.name, `Only instances have properties.`)
+    }
   }
   this.visitBinary = function (b) {
     // TODO: later, for short circuiting logical operators, don't evaulate right unless needed
