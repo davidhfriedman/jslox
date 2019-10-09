@@ -133,7 +133,7 @@ function Resolver(interpreter) {
   this.visitExpressionStatement = function (e) {
     e.expr.accept(this)
   }
-  
+
   this.visitIfStatement = function (i) {
     i.condition.accept(this)
     i.then.accept(this)
@@ -179,6 +179,11 @@ function Resolver(interpreter) {
 
   this.visitGetterExpression = function (g) {
     g.object.accept(this)
+  }
+
+  this.visitSetterExpression = function (s) {
+    s.object.accept(this)
+    s.value.accept(this)
   }
   
   this.visitGrouping = function (g) {

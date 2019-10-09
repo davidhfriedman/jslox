@@ -1,0 +1,6 @@
+class cake {}
+var c = cake();
+print c;
+c.frosting = "vanilla";
+print c.frosting; // expect: "vanilla"
+//print c.cost; // expect: not found

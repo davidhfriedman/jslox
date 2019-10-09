@@ -90,6 +90,10 @@ LoxInstance.prototype.get = function(propToken) {
   }
   throw error(propToken, `Undefined property '${prop}'.`)
 }
+LoxInstance.prototype.set = function(propToken, value) {
+  const prop = propToken.lexeme
+  this.fields[prop] = value
+}
 
 const LoxClass = function (name, arity) {
   this.name = name
@@ -297,6 +301,16 @@ function Interpreter(mode = null) {
       return obj.get(g.name)
     } else {
       throw error(g.name, `Only instances have properties.`)
+    }
+  }
+  this.visitSetterExpression = function (s) {
+    const obj = s.object.accept(this)
+    if (obj instanceof LoxInstance) {
+      const value = s.value.accept(this)
+      obj.set(s.name, value)
+      return value
+    } else {
+      throw error(s.name, `Only instances have fields.`)
     }
   }
   this.visitBinary = function (b) {

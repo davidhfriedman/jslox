@@ -1,0 +1,14 @@
+class A {}
+var a = A();
+a.name = "me";
+a.up = A();
+a.up.name = "mama";
+a.up.up = A();
+a.up.up.name = "gramma";
+
+print a.name;
+print a.up;
+print a.up.name;
+print a.up.up;
+print a.up.up.name;
+

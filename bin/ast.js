@@ -123,6 +123,14 @@ function GetterExpression(object, name) {
 
 GetterExpression.prototype.accept = function (v) { return v.visitGetterExpression(this) }
 
+function SetterExpression(object, name, value) {
+  this.object = object
+  this.name = name
+  this.value = value
+}
+
+SetterExpression.prototype.accept = function (v) { return v.visitSetterExpression(this) }
+
 function Binary(left, operator, right) {
   this.left = left
   this.operator = operator
@@ -160,6 +168,7 @@ ${f.body.accept(this)})` },
   visitUnary: function (u) { return `(${u.operator.lexeme} ${u.expr.accept(this)})` },
   visitCall: function (c) { return `(call ${c.callee.accept(this)} ${c.args.map(a => a.accept(this)).join(',')} ${c.closing_paren.line})` },
   visitGetterExpression: function (g) { return `(get ${g.object} ${g.name})` },
+  visitSetterExpression: function (s) { return `(set ${s.object} ${a.name} ${a.value})` },
   visitBinary: function (b) { return `(${b.operator.lexeme} ${b.left.accept(this)} ${b.right.accept(this)})` },
   visitVariable: function (v) { return `(var ${v.name} ${v.value}` }
 }
@@ -173,6 +182,7 @@ module.exports = { Program, VarDeclaration, FunDeclaration, ClassDeclaration,
 		   Block, IfStatement, ExpressionStatement, PrintStatement, WhileStatement,
 		   BreakStatement, ReturnStatement,
 		   Assignment, Logical,
-		   Literal, Grouping, Unary, Call, Binary, Variable, GetterExpression,
+		   Literal, Grouping, Unary, Call, Binary, Variable,
+		   GetterExpression, SetterExpression,
 		   pprint }
 

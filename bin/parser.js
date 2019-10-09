@@ -3,7 +3,8 @@ const { Program, VarDeclaration, FunDeclaration, ClassDeclaration,
 	Block, IfStatement, ExpressionStatement, PrintStatement, WhileStatement,
 	BreakStatement, ReturnStatement,
 	Assignment, Logical,
-	Literal, Grouping, Unary, Call, Binary, Variable, GetterExpression } = require('./ast')
+	GetterExpression, SetterExpression,
+	Literal, Grouping, Unary, Call, Binary, Variable } = require('./ast')	
 const { report, hadError } = require('./errors')
 
 function Parser(tokens) {
@@ -288,6 +289,8 @@ Parser.prototype.assignment = function () {
     if (expression instanceof Variable) {
       let name = expression.name
       return new Assignment(name, value)
+    } else if (expression instanceof GetterExpression) {
+      return new SetterExpression(expression.object, expression.name, value)
     }
     return this.error(lval, "Invalid assignment target.")
   }
