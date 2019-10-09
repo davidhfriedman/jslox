@@ -128,6 +128,7 @@ function Resolver(interpreter) {
   this.visitClassDeclaration = function (c) {
     this.declare(c.name)
     this.define(c.name)
+    c.methods.forEach(m => this.resolveFunction(m))
   }
 
   this.visitExpressionStatement = function (e) {

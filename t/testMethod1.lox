@@ -1,0 +1,7 @@
+class Cat {
+  greet() {
+    print "Meow!";
+  }
+}
+
+Cat().greet(); // expect: 'Meow!'

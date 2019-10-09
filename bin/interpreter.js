@@ -77,6 +77,20 @@ function typeCheckNumbersOrStrings(operator, left, right) {
   }
 }
 
+const LoxFunction = function (func, env) {
+  this.decl = func
+  this.closure = env
+}
+
+LoxFunction.prototype.arity = function () { return this.decl.params.length }
+LoxFunction.prototype.toString = function() { return `<fn '${this.decl.name.lexeme}'>` }
+LoxFunction.prototype.call = function(interpreter, args) {
+  const env = new Environment(this.closure)
+  this.decl.params.forEach((p,i) => env.define(p.lexeme, args[i]))
+  interpreter.interpretBlock(env, this.decl.body)
+  return null
+}
+
 const LoxInstance = function (clss) {
   this["class"] = clss // an instance of LoxClass
   this.fields = {}
@@ -88,6 +102,10 @@ LoxInstance.prototype.get = function(propToken) {
   if (this.fields.hasOwnProperty(prop)) {
     return this.fields[prop]
   }
+  const method = this["class"].findMethod(prop)
+  if (method !== null) {
+    return method
+  }
   throw error(propToken, `Undefined property '${prop}'.`)
 }
 LoxInstance.prototype.set = function(propToken, value) {
@@ -95,12 +113,19 @@ LoxInstance.prototype.set = function(propToken, value) {
   this.fields[prop] = value
 }
 
-const LoxClass = function (name, arity) {
+const LoxClass = function (name, methods) {
   this.name = name
-  this.arity_ = arity // property has _ name collides with method arity()
+  this.methods = methods
 }
 
-LoxClass.prototype.arity = function() { return this.arity_ }
+LoxClass.prototype.findMethod = function (prop) {
+  if (this.methods.hasOwnProperty(prop)) {
+    return this.methods[prop]
+  } else {
+    return null
+  }
+}
+LoxClass.prototype.arity = function() { return 0 }
 LoxClass.prototype.call = function(interpreter) {
   return new LoxInstance(this)
 }
@@ -148,24 +173,18 @@ function Interpreter(mode = null) {
     return r
   }
   this.visitFunDeclaration = function (f) {
-    const func = {
-      decl: f,
-      closure: this.environment,
-      arity: function() { return this.decl.params.length },
-      toString: function() { return `<fn '${this.decl.name.lexeme}'>` },
-      call: function(interpreter, args) {
-	const env = new Environment(this.closure)
-	this.decl.params.forEach((p,i) => env.define(p.lexeme, args[i]))
-	interpreter.interpretBlock(env, this.decl.body)
-	return null
-      }
-    }
+    const func = new LoxFunction(f, this.environment)
     this.environment.define(f.name.lexeme, func)
     return null
   }
   this.visitClassDeclaration = function (c) {
     this.environment.define(c.name.lexeme, null)
-    const clss = new LoxClass(c.name.lexeme, 0)
+    let methods = {}
+    c.methods.forEach(m => {
+      const func = new LoxFunction(m, this.environment)
+      methods[m.name.lexeme] = func
+    })
+    const clss = new LoxClass(c.name.lexeme, methods)
     this.environment.assign(c.name, clss)
     return null
   }
