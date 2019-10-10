@@ -48,9 +48,7 @@ function run(source, interpreter) {
   const parser = new Parser(tokens)
   while (!parser.atEnd()) {
     const expression = parser.parse()
-    if (!development_mode) {
-      if (hadError()) { return }
-    }
+    if (hadError()) { return }
     const resolver = new Resolver(interpreter)
     resolver.resolve(expression)
     if (hadError()) { return }
