@@ -1,0 +1,15 @@
+class C {
+  init(a, b, c) {
+    this.a = a;
+    this.b = b;
+    this.c = c;
+  }
+  show() {
+    print "a: " + this.a + " b: " + this.b + " c: " + this.c;
+  }
+}
+
+var c = C("apple", "banana", "cherry");
+c.show(); // expect: "a: apple b: banana c: cherry"
+print c.init("foo", "bar", "baz"); // expect: <C instance>
+c.show(); // expect: "a: foo b: bar c: baz"

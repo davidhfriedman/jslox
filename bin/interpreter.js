@@ -52,12 +52,14 @@ function areEqual(a, b) {
 
 function typeCheckNumber(operator, operand) {
   if (typeof operand === "number") { return }
+  error(operator, `Operand must be a number.`)
   throw new TypeError({ operator: operator, operand: operand, expected: 'number' })
 }
 
 function typeCheckNumbers(operator, left, right) {
   if (typeof left === "number" && typeof right === "number" ) { return }
   const operand = (typeof left === "number") ? right : left
+  error(operator, `Operands must be two numbers.`)
   throw new TypeError({ operator: operator, operand: operand, expected: 'number' })
 }
 
@@ -66,20 +68,24 @@ function typeCheckNumbersOrStrings(operator, left, right) {
     if (typeof right === "number" ) {
       return
     } else {
+      error(operator, `Operands must be two numbers or two strings.`)
       throw new TypeError({ operator: operator, operand: right, expected: 'number' })
     }
   } else if (typeof left === "string") {
     if (typeof right === "string" ) {
       return
     } else {
+      error(operator, `Operands must be two numbers or two strings.`)
       throw new TypeError({ operator: operator, operand: right, expected: 'string' })
     }
   }
 }
 
-const LoxFunction = function (func, env) {
+const LoxFunction = function (func, env, isInitializer) {
   this.decl = func
   this.closure = env
+  // can't just inspect the name because a user can define an init function which isn't a method
+  this.isInitializer = isInitializer
 }
 
 LoxFunction.prototype.arity = function () { return this.decl.params.length }
@@ -88,13 +94,15 @@ LoxFunction.prototype.call = function(interpreter, args) {
   const env = new Environment(this.closure)
   this.decl.params.forEach((p,i) => env.define(p.lexeme, args[i]))
   interpreter.interpretBlock(env, this.decl.body)
-  return null
+  // initializers are defined to return 'this' (to be compatible with bytecode interpreter's semantics.)
+  if (this.isInitializer) { return this.closure.lookupAt(0, 'this') }
+  else { return null }
 }
 LoxFunction.prototype.bind = function(instance) {
   // resolver visitClassDeclaration beginScope/endScope corresponds to this environment
   const env = new Environment(this.closure)
   env.define('this', instance)
-  return new LoxFunction(this.decl, env)
+  return new LoxFunction(this.decl, env, this.isInitializer)
 }
 
 const LoxInstance = function (clss) {
@@ -131,9 +139,17 @@ LoxClass.prototype.findMethod = function (prop) {
     return null
   }
 }
-LoxClass.prototype.arity = function() { return 0 }
-LoxClass.prototype.call = function(interpreter) {
-  return new LoxInstance(this)
+LoxClass.prototype.arity = function() {
+  const initializer = this.findMethod('init')
+  return initializer === null ? 0 : initializer.arity()
+}
+LoxClass.prototype.call = function(interpreter, args) {
+  const instance = new LoxInstance(this)
+  const initializer = this.findMethod('init')
+  if (initializer !== null) {
+    initializer.bind(instance).call(interpreter, args)
+  }
+  return instance
 }
 LoxClass.prototype.toString = function() { return `<class '${this.name}'>` }
 
@@ -179,7 +195,7 @@ function Interpreter(mode = null) {
     return r
   }
   this.visitFunDeclaration = function (f) {
-    const func = new LoxFunction(f, this.environment)
+    const func = new LoxFunction(f, this.environment, false) // not a class initializer
     this.environment.define(f.name.lexeme, func)
     return null
   }
@@ -187,7 +203,7 @@ function Interpreter(mode = null) {
     this.environment.define(c.name.lexeme, null)
     let methods = {}
     c.methods.forEach(m => {
-      const func = new LoxFunction(m, this.environment)
+      const func = new LoxFunction(m, this.environment, m.name.lexeme === 'init')
       methods[m.name.lexeme] = func
     })
     const clss = new LoxClass(c.name.lexeme, methods)
@@ -390,7 +406,7 @@ function Interpreter(mode = null) {
       e = (left / right)
       break
     default:
-      //throw error(b, `Expected '==', '!=', '<', '<=', '>', '>=', '+', '-', '*', '/'.`)
+      error(b, `Expected '==', '!=', '<', '<=', '>', '>=', '+', '-', '*', '/'.`)
       e = null
     }
     return e
