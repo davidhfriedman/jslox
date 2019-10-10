@@ -1,0 +1,1 @@
+print super.scooper; // TODO - no error, expected cannot use super outside of class

@@ -1,0 +1,16 @@
+class A {
+  say() {
+    print "A";
+  }
+}
+
+class B < A {
+  supersay() {
+    return super.say;
+  }
+}
+
+var b = B();
+var m = b.supersay;
+m(); // expect: A
+

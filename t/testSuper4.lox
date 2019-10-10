@@ -1,0 +1,4 @@
+class A { method() { return "A"; } }
+class B < A { method() { return "B"; } test() { return super.method(); } }
+class C < B {}
+print C().test(); // expect: "A"
