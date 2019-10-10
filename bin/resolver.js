@@ -41,6 +41,7 @@ function Resolver(interpreter) {
   this.scopes = new Stack()
   this.inFunction = false
   this.inClass = false
+  this.inInitializer = false
   this.loopLevel = 0
   
   this.beginScope = function () {
@@ -139,7 +140,12 @@ function Resolver(interpreter) {
     // LoxFunction.prototype.bind creates the scopes at runtime that correspond to this scope
     this.beginScope()
     this.define('this')
-    c.methods.forEach(m => this.resolveFunction(m) )
+    c.methods.forEach(m => {
+      let prevInInitializer = this.inInitializer
+      if (m.name.lexeme === 'init') { this.inInitializer = true }
+      this.resolveFunction(m)
+      this.inInitializer = prevInInitializer
+    })
     this.endScope()
     this.inClass = prevInClass
   }
@@ -163,6 +169,9 @@ function Resolver(interpreter) {
       error(r.keyword, `Cannot return from top-level code.`)
     }
     if (r.value !== null) {
+      if (this.inInitializer == true) {
+	error(r.keyword, `Cannot return a value from an initializer.`)
+      }
       r.value.accept(this)
     }
   }

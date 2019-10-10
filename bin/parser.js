@@ -194,11 +194,9 @@ Parser.prototype.breakStatement = function () {
 
 Parser.prototype.returnStatement = function () {
   let keyword = this.previous()
-  let value
+  let value = null
   if (!this.check(TokenType.SEMICOLON)) {
     value = this.expression()
-  } else {
-    value = new Literal(TokenType.NIL)
   }
   this.consume(TokenType.SEMICOLON, "Expect ';' after return statement")
   return new ReturnStatement(keyword, value)

@@ -93,7 +93,13 @@ LoxFunction.prototype.toString = function() { return `<fn '${this.decl.name.lexe
 LoxFunction.prototype.call = function(interpreter, args) {
   const env = new Environment(this.closure)
   this.decl.params.forEach((p,i) => env.define(p.lexeme, args[i]))
-  interpreter.interpretBlock(env, this.decl.body)
+  try {
+    interpreter.interpretBlock(env, this.decl.body)
+  } catch(e) {
+    if (!e instanceof ReturnException) {
+      throw e
+    }
+  }
   // initializers are defined to return 'this' (to be compatible with bytecode interpreter's semantics.)
   if (this.isInitializer) { return this.closure.lookupAt(0, 'this') }
   else { return null }

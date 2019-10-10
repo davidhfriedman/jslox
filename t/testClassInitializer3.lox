@@ -1,0 +1,12 @@
+class C {
+  init() {
+    return "Can't happen";
+  }
+  say() {
+    print "See? Say.";
+  }
+}
+
+var c = C(); // expect "Cannot return a value from an initializer"
+print c;
+c.say();

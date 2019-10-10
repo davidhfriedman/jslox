@@ -1,0 +1,12 @@
+class C {
+  init() {
+    return;
+  }
+  say() {
+    print "See? Say.";
+  }
+}
+
+var c = C(); 
+print c; // expect: <C instance>
+c.say(); // expect: "See? Say."
