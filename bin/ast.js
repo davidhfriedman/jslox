@@ -131,6 +131,12 @@ function SetterExpression(object, name, value) {
 
 SetterExpression.prototype.accept = function (v) { return v.visitSetterExpression(this) }
 
+function ThisExpression(keyword) {
+  this.keyword = keyword // for line number for error messages
+}
+
+ThisExpression.prototype.accept = function (v) { return v.visitThisExpression(this) }
+
 function Binary(left, operator, right) {
   this.left = left
   this.operator = operator
@@ -169,6 +175,7 @@ ${f.body.accept(this)})` },
   visitCall: function (c) { return `(call ${c.callee.accept(this)} ${c.args.map(a => a.accept(this)).join(',')} ${c.closing_paren.line})` },
   visitGetterExpression: function (g) { return `(get ${g.object} ${g.name})` },
   visitSetterExpression: function (s) { return `(set ${s.object} ${a.name} ${a.value})` },
+  visitThisExpression: function (t) { return "this" },
   visitBinary: function (b) { return `(${b.operator.lexeme} ${b.left.accept(this)} ${b.right.accept(this)})` },
   visitVariable: function (v) { return `(var ${v.name} ${v.value}` }
 }
@@ -183,6 +190,6 @@ module.exports = { Program, VarDeclaration, FunDeclaration, ClassDeclaration,
 		   BreakStatement, ReturnStatement,
 		   Assignment, Logical,
 		   Literal, Grouping, Unary, Call, Binary, Variable,
-		   GetterExpression, SetterExpression,
+		   GetterExpression, SetterExpression, ThisExpression,
 		   pprint }
 

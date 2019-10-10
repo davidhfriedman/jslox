@@ -3,7 +3,7 @@ const { Program, VarDeclaration, FunDeclaration, ClassDeclaration,
 	Block, IfStatement, ExpressionStatement, PrintStatement, WhileStatement,
 	BreakStatement, ReturnStatement,
 	Assignment, Logical,
-	GetterExpression, SetterExpression,
+	GetterExpression, SetterExpression, ThisExpression,
 	Literal, Grouping, Unary, Call, Binary, Variable } = require('./ast')	
 const { report, hadError } = require('./errors')
 
@@ -406,6 +406,7 @@ Parser.prototype.primary = function () {
   if (this.match(TokenType.TRUE)) { return new Literal(true) }
   if (this.match(TokenType.NIL)) { return new Literal(null) }
   if (this.match(TokenType.NUMBER, TokenType.STRING)) { return new Literal(this.previous().literal) }
+  if (this.match(TokenType.THIS)) { return new ThisExpression(this.previous()) }
   if (this.match(TokenType.IDENTIFIER)) { return new Variable(this.previous()) }
   if (this.match(TokenType.LEFT_PAREN)) {
     const expr = this.expression()

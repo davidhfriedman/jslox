@@ -1,0 +1,14 @@
+class Cat {
+  greet() {
+    print "Meow! I'm " + this.name;
+  }
+}
+
+var c = Cat();
+c.name = "Spot";
+c.greet(); // expect: "Meow! I'm Spot"
+
+var greet = c.greet;
+greet(); // expect: "Meow! I'm Spot"
+c.name = "Stripe";
+greet(); // expect: "Meow! I'm Stripe"

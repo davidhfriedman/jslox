@@ -55,10 +55,10 @@ function Resolver(interpreter) {
       return
     }
     const scope = this.scopes.peek()
-    if (scope.hasOwnProperty(name.lexeme)) {
+    if (scope.hasOwnProperty(name)) {
       error(name, `Variable with this name already declared in this scope.`)
     }
-    scope[name.lexeme] = false // "not ready yet" - declared but not initialized
+    scope[name] = false // "not ready yet" - declared but not initialized
   }
 
   this.define = function (name) {
@@ -66,7 +66,7 @@ function Resolver(interpreter) {
       return
     }
     const scope = this.scopes.peek()
-    scope[name.lexeme] = true
+    scope[name] = true
   }
 
   this.resolveLocal = function (v, name) {
@@ -85,8 +85,9 @@ function Resolver(interpreter) {
     this.inFunction = true
     this.beginScope()
     f.params.forEach(p => {
-      this.declare(p)
-      this.define(p)
+      let name = p.lexeme
+      this.declare(name)
+      this.define(name)
     })
     f.body.forEach(s => s.accept(this))
     this.endScope()
@@ -100,11 +101,12 @@ function Resolver(interpreter) {
   }
 
   this.visitVarDeclaration = function (v) {
-    this.declare(v.name)
+    let name = v.name.lexeme
+    this.declare(name)
     if (v.val !== null) {
       v.val.accept(this)
     }
-    this.define(v.name)
+    this.define(name)
   }
 
   this.visitVariable = function (v) {
@@ -120,15 +122,22 @@ function Resolver(interpreter) {
   }
 
   this.visitFunDeclaration = function (f) {
-    this.declare(f.name)
-    this.define(f.name)
+    let name = f.name.lexeme
+    this.declare(name)
+    this.define(name)
     this.resolveFunction(f)
   }
 
   this.visitClassDeclaration = function (c) {
-    this.declare(c.name)
-    this.define(c.name)
-    c.methods.forEach(m => this.resolveFunction(m))
+    let name = c.name.lexeme
+    this.declare(name)
+    this.define(name)
+    
+    // LoxFunction.prototype.bind creates the scopes at runtime that correspond to this scope
+    this.beginScope()
+    this.define('this')
+    c.methods.forEach(m => this.resolveFunction(m) )
+    this.endScope()
   }
 
   this.visitExpressionStatement = function (e) {
@@ -185,6 +194,10 @@ function Resolver(interpreter) {
   this.visitSetterExpression = function (s) {
     s.object.accept(this)
     s.value.accept(this)
+  }
+
+  this.visitThisExpression = function (t) {
+    this.resolveLocal(t, t.keyword)
   }
   
   this.visitGrouping = function (g) {

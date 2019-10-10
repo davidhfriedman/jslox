@@ -90,6 +90,12 @@ LoxFunction.prototype.call = function(interpreter, args) {
   interpreter.interpretBlock(env, this.decl.body)
   return null
 }
+LoxFunction.prototype.bind = function(instance) {
+  // resolver visitClassDeclaration beginScope/endScope corresponds to this environment
+  const env = new Environment(this.closure)
+  env.define('this', instance)
+  return new LoxFunction(this.decl, env)
+}
 
 const LoxInstance = function (clss) {
   this["class"] = clss // an instance of LoxClass
@@ -104,7 +110,7 @@ LoxInstance.prototype.get = function(propToken) {
   }
   const method = this["class"].findMethod(prop)
   if (method !== null) {
-    return method
+    return method.bind(this)
   }
   throw error(propToken, `Undefined property '${prop}'.`)
 }
@@ -332,6 +338,9 @@ function Interpreter(mode = null) {
       throw error(s.name, `Only instances have fields.`)
     }
   }
+  this.visitThisExpression = function (t) {
+    return this.lookupVariable(t.keyword, t)
+  }
   this.visitBinary = function (b) {
     // TODO: later, for short circuiting logical operators, don't evaulate right unless needed
     // NOTE: operators evaluated in left-to-right order. Do we declare this part of the
@@ -386,13 +395,16 @@ function Interpreter(mode = null) {
     }
     return e
   }
-  this.visitVariable = function (v) {
-    const distance = this.locals.get(v)
+  this.lookupVariable = function (name, expr) {
+    const distance = this.locals.get(expr)
     if (distance != undefined) {
-      return this.environment.lookupAt(distance, v.name.lexeme)
+      return this.environment.lookupAt(distance, name.lexeme)
     } else {
-      return this.globals.lookup(v.name.lexeme)
+      return this.globals.lookup(name.lexeme)
     }
+  }
+  this.visitVariable = function (v) {
+    return this.lookupVariable(v.name, v)
   }
   this.resolve = function (expr, depth) {
     // interface for the variable resolution semantic analysis pass
