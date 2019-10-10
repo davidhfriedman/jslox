@@ -1,0 +1,30 @@
+class A {
+  say() {
+    print "I'm an A";
+  }
+  grunt() {
+    print "Ungh.";
+  }
+}
+
+class B < A {
+  say() {
+    print "I'm a B";
+  }
+}
+
+class C < B {
+}
+
+var a = A();
+var b = B();
+var c = C();
+print a; // expect: <A instance>
+print b; // expect: <B instance>
+print c; // expect: <C instance>
+a.say(); // expect: "I'm an A"
+b.say(); // expect: "I'm a B"
+c.say(); // expect: "I'm a B" TODO - class name at runtime?
+a.grunt(); // expect: Ungh.
+b.grunt(); // expect: Ungh.
+c.grunt(); // expect: Ungh.
