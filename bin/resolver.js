@@ -40,6 +40,7 @@ function Resolver(interpreter) {
   this.interpreter = interpreter
   this.scopes = new Stack()
   this.inFunction = false
+  this.inClass = false
   this.loopLevel = 0
   
   this.beginScope = function () {
@@ -129,6 +130,8 @@ function Resolver(interpreter) {
   }
 
   this.visitClassDeclaration = function (c) {
+    let prevInClass = this.inClass
+    this.inClass = true
     let name = c.name.lexeme
     this.declare(name)
     this.define(name)
@@ -138,6 +141,7 @@ function Resolver(interpreter) {
     this.define('this')
     c.methods.forEach(m => this.resolveFunction(m) )
     this.endScope()
+    this.inClass = prevInClass
   }
 
   this.visitExpressionStatement = function (e) {
@@ -197,7 +201,11 @@ function Resolver(interpreter) {
   }
 
   this.visitThisExpression = function (t) {
-    this.resolveLocal(t, t.keyword)
+    if (this.inClass === false) {
+      error(t.keyword, `Cannot use 'this' outside of a class.`)
+    } else {
+      this.resolveLocal(t, t.keyword)
+    }
   }
   
   this.visitGrouping = function (g) {

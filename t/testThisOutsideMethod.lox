@@ -1,0 +1,11 @@
+print this;
+fun notMethod() {
+  print this;
+}
+class C {
+  f() {
+    print this;
+  }
+}
+var c = C();
+c.f();
