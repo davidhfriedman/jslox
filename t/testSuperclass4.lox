@@ -1,0 +1,3 @@
+class A < B {} // expect: Undefined variable 'B'.
+class B < A {}
+

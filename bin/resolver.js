@@ -136,7 +136,15 @@ function Resolver(interpreter) {
     let name = c.name.lexeme
     this.declare(name)
     this.define(name)
-    
+    // inheritance cycles not allowed, avoid class C < C {}
+    // class A < B {}; class B < A {} isn't possible because B not defined.
+    if (c.superclass !== null && name === c.superclass.name.lexeme) {
+      error(c.superclass.name, "A class cannot inherit from itself.")
+    }
+    // Lox allows class declarations in blocks, so superclass name scope must be resolved
+    if (c.superclass !== null) {
+      this.resolve(c.superclass)
+    }
     // LoxFunction.prototype.bind creates the scopes at runtime that correspond to this scope
     this.beginScope()
     this.define('this')

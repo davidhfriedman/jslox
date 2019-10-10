@@ -155,13 +155,18 @@ Parser.prototype.funDeclaration = function () {
 
 Parser.prototype.classDeclaration = function () {
   let name = this.consume(TokenType.IDENTIFIER, "Expect class name.")
+  let superclass = null
+  if (this.match(TokenType.LESS)) {
+    this.consume(TokenType.IDENTIFIER, "Expect superclass name.")    
+    superclass = new Variable(this.previous())
+  }
   this.consume(TokenType.LEFT_BRACE, "Expect '{' before class body.")
   const methods = []
   while (!this.check(TokenType.RIGHT_BRACE) && !this.atEnd()) {
     methods.push(this.funDeclaration())
   }
   this.consume(TokenType.RIGHT_BRACE, "Expect '}' after class body.")
-  return new ClassDeclaration(name, methods)
+  return new ClassDeclaration(name, superclass, methods)
   
 }
 

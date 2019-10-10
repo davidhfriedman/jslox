@@ -21,8 +21,9 @@ function FunDeclaration(name, params, body) {
 
 FunDeclaration.prototype.accept = function (v) { return v.visitFunDeclaration(this) }
 
-function ClassDeclaration(name, methods) {
+function ClassDeclaration(name, superclass, methods) {
   this.name = name
+  this.superclass = superclass // Variable (not token)
   this.methods = methods
 }
 
@@ -157,7 +158,7 @@ const PPrintVisitor = {
   visitFunDeclaration: function (f) { return `(fundec ${f.name} ${f.params.map(p => p.accept(this)).join(',')}
 ${f.body.accept(this)})` },
   visitVarDeclaration: function (d) { return `(vardec ${d.name} ${d.val.accept(this)})` },
-  visitClassDeclaration: function (c) { return `(class ${c.name} ${f.methods.map(m => m.accept(this)).join(',')})` },
+  visitClassDeclaration: function (c) { return `(class ${c.name} ${c.superclass||''} ${f.methods.map(m => m.accept(this)).join(',')})` },
   visitBreakStatement: function (b) { return `(break)` },
   visitReturnStatement: function (r) { return `(return ${r.value.accept(this)})` },
   visitWhileStatement: function (w) { return `(while ${w.condition.accept(this)} ${w.body.accept(this)})` },

@@ -96,7 +96,7 @@ LoxFunction.prototype.call = function(interpreter, args) {
   try {
     interpreter.interpretBlock(env, this.decl.body)
   } catch(e) {
-    if (!e instanceof ReturnException) {
+    if (!(e instanceof ReturnException)) {
       throw e
     }
   }
@@ -133,14 +133,17 @@ LoxInstance.prototype.set = function(propToken, value) {
   this.fields[prop] = value
 }
 
-const LoxClass = function (name, methods) {
+const LoxClass = function (name, superclass, methods) {
   this.name = name
+  this.superclass = superclass
   this.methods = methods
 }
 
 LoxClass.prototype.findMethod = function (prop) {
   if (this.methods.hasOwnProperty(prop)) {
     return this.methods[prop]
+  } else if (this.superclass !== null) {
+    return this.superclass.findMethod(prop)
   } else {
     return null
   }
@@ -206,13 +209,20 @@ function Interpreter(mode = null) {
     return null
   }
   this.visitClassDeclaration = function (c) {
+    let superclass = null
+    if (c.superclass !== null) {
+      superclass = c.superclass.accept(this)
+      if (!(superclass instanceof LoxClass)) {
+	throw error(c.superclass.name, `Superclass must be a class.`)
+      }
+    }
     this.environment.define(c.name.lexeme, null)
     let methods = {}
     c.methods.forEach(m => {
       const func = new LoxFunction(m, this.environment, m.name.lexeme === 'init')
       methods[m.name.lexeme] = func
     })
-    const clss = new LoxClass(c.name.lexeme, methods)
+    const clss = new LoxClass(c.name.lexeme, superclass, methods)
     this.environment.assign(c.name, clss)
     return null
   }

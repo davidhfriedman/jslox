@@ -1,0 +1,2 @@
+class A < A {} // expect: A class cannot inherit from itself
+

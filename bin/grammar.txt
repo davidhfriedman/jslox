@@ -4,7 +4,7 @@ varDeclaration → "var" IDENTIFIER ( "=" expression )? ";" ;
 funDeclaration → "fun" function ;
 function       → IDENTIFIER "(" parameters? ")" block ;
 parameters     → IDENTIFIER ( "," IDENTIFIER ) * ;
-classDeclaration → "class" IDENTIFIER "{" function* "}" ;
+classDeclaration → "class" IDENTIFIER ( "<" IDENTIFIER )? "{" function* "}" ;
 statement      → exprStmt | forStmt | ifStmt | printStmt | whileStmt | breakStmt | returnStmt | block ;
 whileStmt      → "while" "(" expression ")" statement ;
 breakStmt      → "break" ";" ;

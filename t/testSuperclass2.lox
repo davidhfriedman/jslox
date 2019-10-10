@@ -1,0 +1,24 @@
+class A {
+  say() {
+    print "I'm an A";
+  }
+  grunt() {
+    print "Ungh.";
+  }
+}
+
+class B < A {
+  say() {
+    print "I'm a B";
+  }
+}
+
+var a = A();
+var b = B();
+print a; // expect: <A instance>
+print b; // expect: <B instance>
+a.say(); // expect: "I'm an A"
+b.say(); // expect: "I'm a B"
+a.grunt(); // expect: Ungh.
+b.grunt(); // expect: Ungh.
+
