@@ -410,6 +410,12 @@ Parser.prototype.primary = function () {
   if (this.match(TokenType.NIL)) { return new Literal(null) }
   if (this.match(TokenType.NUMBER, TokenType.STRING)) { return new Literal(this.previous().literal) }
   if (this.match(TokenType.THIS)) { return new ThisExpression(this.previous()) }
+  if (this.match(TokenType.SUPER)) {
+    const keyword = this.previous()
+    this.consume(TokenType.DOT, `Expect '.' after 'super'.`)
+    const method = this.consume(TokenType.IDENTIFIER, `Expect superclass method name.`)
+    return new SuperExpression(keyword, method)
+  }
   if (this.match(TokenType.IDENTIFIER)) { return new Variable(this.previous()) }
   if (this.match(TokenType.LEFT_PAREN)) {
     const expr = this.expression()
@@ -423,8 +429,11 @@ Parser.prototype.parse = function () {
   try {
     return this.program()
   } catch (e) {
-    hadError(true)
-    return e
+    if (e instanceof ParseError) {
+      return null
+    } else {
+      throw e
+    }
   }
 }
 

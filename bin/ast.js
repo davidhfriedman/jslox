@@ -138,6 +138,13 @@ function ThisExpression(keyword) {
 
 ThisExpression.prototype.accept = function (v) { return v.visitThisExpression(this) }
 
+function SuperExpression(keyword, method) {
+  this.keyword = keyword // for line number for error messages
+  this.method = method
+}
+
+SuperExpression.prototype.accept = function (v) { return v.visitSuperExpression(this) }
+
 function Binary(left, operator, right) {
   this.left = left
   this.operator = operator
@@ -177,6 +184,7 @@ ${f.body.accept(this)})` },
   visitGetterExpression: function (g) { return `(get ${g.object} ${g.name})` },
   visitSetterExpression: function (s) { return `(set ${s.object} ${a.name} ${a.value})` },
   visitThisExpression: function (t) { return "this" },
+  visitSuperExpression: function (s) { return `(super ${s.method})` },
   visitBinary: function (b) { return `(${b.operator.lexeme} ${b.left.accept(this)} ${b.right.accept(this)})` },
   visitVariable: function (v) { return `(var ${v.name} ${v.value}` }
 }
