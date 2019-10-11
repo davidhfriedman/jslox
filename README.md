@@ -32,6 +32,9 @@ For quickie command line tests:
 ## wip status
 
 2019-10-11 chapter 13 done, except for challenges
+
 2019-10-10 chapter 12 done, except for challenges
+
 2019-10-07 chapter 11 done, except for challenges
+
 2019-10-02 chapter 10 done, except for anonymous functions challenge
