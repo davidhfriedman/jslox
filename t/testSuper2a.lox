@@ -1,0 +1,15 @@
+class A {
+  say() {
+    print "A";
+  }
+}
+
+class B < A {
+  say() {
+    super.NOSUCH();
+    print "B";
+  }
+}
+
+var b = B();
+b.say(); // expect: A \n B

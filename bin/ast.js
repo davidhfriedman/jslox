@@ -199,6 +199,6 @@ module.exports = { Program, VarDeclaration, FunDeclaration, ClassDeclaration,
 		   BreakStatement, ReturnStatement,
 		   Assignment, Logical,
 		   Literal, Grouping, Unary, Call, Binary, Variable,
-		   GetterExpression, SetterExpression, ThisExpression,
+		   GetterExpression, SetterExpression, ThisExpression, SuperExpression,
 		   pprint }
 

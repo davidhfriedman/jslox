@@ -3,7 +3,7 @@ const { Program, VarDeclaration, FunDeclaration, ClassDeclaration,
 	Block, IfStatement, ExpressionStatement, PrintStatement, WhileStatement,
 	BreakStatement, ReturnStatement,
 	Assignment, Logical,
-	GetterExpression, SetterExpression, ThisExpression,
+	GetterExpression, SetterExpression, ThisExpression, SuperExpression,
 	Literal, Grouping, Unary, Call, Binary, Variable } = require('./ast')	
 const { report, hadError } = require('./errors')
 
@@ -106,28 +106,36 @@ Parser.prototype.program = function () {
 }
 
 Parser.prototype.declaration = function () {
-  if (this.match(TokenType.VAR)) {
-    return this.varDeclaration()
-  } else if (this.match(TokenType.CLASS)) {
-    return this.classDeclaration()
-  } else if (this.match(TokenType.FUN)) {
-    return this.funDeclaration()
-  } else if (this.match(TokenType.FOR)) {
-    return this.forStatement()
-  } else if (this.match(TokenType.IF)) {
-    return this.ifStatement()
-  } else if (this.match(TokenType.LEFT_BRACE)) {
-    return this.blockStatement()
-  } else if (this.match(TokenType.PRINT)) {
-    return this.printStatement()
-  } else if (this.match(TokenType.WHILE)) {
-    return this.whileStatement()
-  } else if (this.match(TokenType.BREAK)) {
-    return this.breakStatement()
-  } else if (this.match(TokenType.RETURN)) {
-    return this.returnStatement()
-  } else {
-    return this.expressionStatement()
+  try {
+    if (this.match(TokenType.VAR)) {
+      return this.varDeclaration()
+    } else if (this.match(TokenType.CLASS)) {
+      return this.classDeclaration()
+    } else if (this.match(TokenType.FUN)) {
+      return this.funDeclaration()
+    } else if (this.match(TokenType.FOR)) {
+      return this.forStatement()
+    } else if (this.match(TokenType.IF)) {
+      return this.ifStatement()
+    } else if (this.match(TokenType.LEFT_BRACE)) {
+      return this.blockStatement()
+    } else if (this.match(TokenType.PRINT)) {
+      return this.printStatement()
+    } else if (this.match(TokenType.WHILE)) {
+      return this.whileStatement()
+    } else if (this.match(TokenType.BREAK)) {
+      return this.breakStatement()
+    } else if (this.match(TokenType.RETURN)) {
+      return this.returnStatement()
+    } else {
+      return this.expressionStatement()
+    }
+  } catch (e) {
+    if (e instanceof ParseError) {
+      this.synchronize()
+    } else {
+      throw e
+    }
   }
 }
 

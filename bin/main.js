@@ -8,7 +8,7 @@ const Parser = require('./parser')
 const Resolver = require('./resolver')
 // TODO: name pprint
 const { pprint } = require('./ast')
-const { Interpreter } = require('./interpreter')
+const { Interpreter, InterpreterError } = require('./interpreter')
 let { hadError } = require('./errors')
 
 hadError(false)
@@ -58,15 +58,9 @@ function run(source, interpreter) {
 	console.log(result) // repl mode echo expression value
       }
     } catch (e) {
-      // TODO - if e is a Lox error, assume it was handled; if not,
-      // display it because it is probably an interpreter bug.
-      // ALL LOX ERRORS SHOULD DERIVE FROM A PARENT TYPE...
-      if (development_mode) {
-	console.log('in run() : ', e.name, ':', e.message) // error reporting
-	console.log(source) // error reporting
-	console.log(e) // dev mode error reporting
+      if (!(e instanceof InterpreterError)) {
+	throw e
       }
-      parser.synchronize()
     }
   }
 }

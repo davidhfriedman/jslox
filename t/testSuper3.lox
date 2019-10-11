@@ -2,15 +2,42 @@ class A {
   say() {
     print "A";
   }
+  mrrr() {
+    return 15;
+  }
 }
 
 class B < A {
   supersay() {
     return super.say;
   }
+  wfff() {
+    return 42;
+  }
 }
 
+var a = A();
+print "1"; // expect: 1
+a.say(); // expect: A
+print a.mrrr(); // expect: 15
+
 var b = B();
+print "2"; // expect: 2
+b.say(); // expect: A
+var bw = b.wfff();
+
+print bw; // expect: 42
+print b.wfff(); // expect: 42
+print b.mrrr(); // expect: 15
+
+var q = b.supersay();
+print "3"; // expect: 3
+print q;  // expect: <fn say>
+print "4"; // expect: 4
+q(); // expect A
+
 var m = b.supersay;
-m(); // expect: A
+print m; // expect: <fn supersay>
+print m(); // expect: <fn say>
+m()(); // expect: A
 

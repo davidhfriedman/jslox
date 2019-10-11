@@ -89,20 +89,21 @@ const LoxFunction = function (func, env, isInitializer) {
 }
 
 LoxFunction.prototype.arity = function () { return this.decl.params.length }
-LoxFunction.prototype.toString = function() { return `<fn '${this.decl.name.lexeme}'>` }
+LoxFunction.prototype.toString = function() { return `<fn ${this.decl.name.lexeme}>` }
 LoxFunction.prototype.call = function(interpreter, args) {
   const env = new Environment(this.closure)
   this.decl.params.forEach((p,i) => env.define(p.lexeme, args[i]))
   try {
     interpreter.interpretBlock(env, this.decl.body)
   } catch(e) {
-    if (!(e instanceof ReturnException)) {
+    if (e instanceof ReturnException) {
+      // initializers are defined to return 'this' (to be compatible with bytecode interpreter's semantics.)
+      if (this.isInitializer) { return this.closure.lookupAt(0, 'this') }
+      else { return e.value }
+    } else {
       throw e
     }
   }
-  // initializers are defined to return 'this' (to be compatible with bytecode interpreter's semantics.)
-  if (this.isInitializer) { return this.closure.lookupAt(0, 'this') }
-  else { return null }
 }
 LoxFunction.prototype.bind = function(instance) {
   // resolver visitClassDeclaration beginScope/endScope corresponds to this environment
@@ -217,12 +218,19 @@ function Interpreter(mode = null) {
       }
     }
     this.environment.define(c.name.lexeme, null)
+    if (c.superclass !== null) {
+      this.environment = new Environment(this.environment)
+      this.environment.define('super', superclass)
+    }
     let methods = {}
     c.methods.forEach(m => {
       const func = new LoxFunction(m, this.environment, m.name.lexeme === 'init')
       methods[m.name.lexeme] = func
     })
     const clss = new LoxClass(c.name.lexeme, superclass, methods)
+    if (c.superclass !== null) {
+      this.environment = this.environment.enclosing // pop the environment that binds the superclass
+    }
     this.environment.assign(c.name, clss)
     return null
   }
@@ -373,6 +381,18 @@ function Interpreter(mode = null) {
   this.visitThisExpression = function (t) {
     return this.lookupVariable(t.keyword, t)
   }
+  this.visitSuperExpression = function (s) {
+    const distance = this.locals.get(s)
+    const superclass = this.environment.lookupAt(distance, 'super')
+    // 'this' is always bound one environment up from 'super' - see resolver
+    const object = this.environment.lookupAt(distance-1, 'this')
+    const method = superclass.findMethod(s.method.lexeme)
+    if (method === null) {
+      throw error(s.method, `Undefined property '${s.method.lexeme}'.`)
+    }
+    const x = method.bind(object)
+    return x
+  }
   this.visitBinary = function (b) {
     // TODO: later, for short circuiting logical operators, don't evaulate right unless needed
     // NOTE: operators evaluated in left-to-right order. Do we declare this part of the
@@ -451,4 +471,4 @@ function Interpreter(mode = null) {
   }
 }
 
-module.exports = { Interpreter }
+module.exports = { Interpreter, InterpreterError }

@@ -1,5 +1,5 @@
 class cake {}
 var c = cake();
-print c;
-// print cake.frosting; NOT AN INSTANCE
-print c.frosting;
+print c; // expect: <cake instance>
+//print cake.frosting; // expect: Error at 'frosting': Only instances have properties.
+print c.frosting; // expect: Error at 'frosting': Undefined propery 'frosting'.

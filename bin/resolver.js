@@ -144,6 +144,8 @@ function Resolver(interpreter) {
     // Lox allows class declarations in blocks, so superclass name scope must be resolved
     if (c.superclass !== null) {
       this.resolve(c.superclass)
+      this.beginScope();
+      this.define('super')
     }
     // LoxFunction.prototype.bind creates the scopes at runtime that correspond to this scope
     this.beginScope()
@@ -155,6 +157,9 @@ function Resolver(interpreter) {
       this.inInitializer = prevInInitializer
     })
     this.endScope()
+    if (c.superclass !== null) {
+      this.endScope()
+    }
     this.inClass = prevInClass
   }
 
@@ -224,7 +229,15 @@ function Resolver(interpreter) {
       this.resolveLocal(t, t.keyword)
     }
   }
-  
+
+  this.visitSuperExpression = function (s) {
+    if (this.inClass === false) {
+      error(s.keyword, `Cannot use 'super' outside of a class.`)
+    } else {
+      this.resolveLocal(s, s.keyword)
+    }
+  }
+	
   this.visitGrouping = function (g) {
     g.expr.accept(this)
   }
