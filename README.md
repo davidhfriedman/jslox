@@ -1,5 +1,6 @@
 # jslox
- Bob Nystrom's Lox Language from [Crafting Interpreters](https://craftinginterpreters.com/), written in JavaScript.
+ A tree-walk interpreter for Bob Nystrom's Lox Language from [Crafting Interpreters](https://craftinginterpreters.com/)
+ , written in JavaScript.
 
 ## usage
 
