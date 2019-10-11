@@ -1,4 +1,4 @@
-my @files = <test/*>;
+my @files = <t/*.lox>;
 runtests(@files);
 
 sub runtests {
@@ -25,7 +25,7 @@ sub runtest {
     my $cmd = "node bin/main.js $file";
     print "$cmd\n";
     system("$cmd 1>me.log 2>&1");
-    $cmd = "(cd ../craftinginterpreters-master/; ./jlox $file)";
+    $cmd = "(cd ../craftinginterpreters-master/; ./jlox ../jslox/$file)";
     print "$cmd\n";
     system("$cmd 1>bob.log 2>&1");
     print `diff me.log bob.log`;

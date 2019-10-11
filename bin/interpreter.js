@@ -1,18 +1,11 @@
 const { TokenType, Token } = require('./token')
 const { pprint } = require('./ast')
 const { Environment } = require('./environment')
-const { report } = require('./errors')
+const { report, InterpreterError } = require('./errors')
 
 const error = function(token, message) {
   report(token.line, token.lexeme, message)
   return new InterpreterError(token, message)
-}
-
-class InterpreterError extends Error {
-  constructor(token, message) {
-    super(`${token.line}: '${token.lexeme}' ${message}`)
-    this.name = 'InterpreterError'
-  }
 }
 
 class BreakException {
@@ -21,13 +14,6 @@ class BreakException {
 class ReturnException {
   constructor(value) {
     this.value = value
-  }
-}
-
-class TypeError extends Error {
-  constructor({operator, operand, expected, message = ''}) {
-    super(`Type error at line ${operator.line}: '${operator.lexeme}' expects ${expected} got '${operand}' ${message}`)
-    this.name = "TypeError"
   }
 }
 
@@ -52,15 +38,13 @@ function areEqual(a, b) {
 
 function typeCheckNumber(operator, operand) {
   if (typeof operand === "number") { return }
-  error(operator, `Operand must be a number.`)
-  throw new TypeError({ operator: operator, operand: operand, expected: 'number' })
+  throw error(operator, `Operand must be a number.`)
 }
 
 function typeCheckNumbers(operator, left, right) {
   if (typeof left === "number" && typeof right === "number" ) { return }
   const operand = (typeof left === "number") ? right : left
-  error(operator, `Operands must be two numbers.`)
-  throw new TypeError({ operator: operator, operand: operand, expected: 'number' })
+  throw error(operator, `Operands must be two numbers.`)
 }
 
 function typeCheckNumbersOrStrings(operator, left, right) {
@@ -68,15 +52,13 @@ function typeCheckNumbersOrStrings(operator, left, right) {
     if (typeof right === "number" ) {
       return
     } else {
-      error(operator, `Operands must be two numbers or two strings.`)
-      throw new TypeError({ operator: operator, operand: right, expected: 'number' })
+      throw error(operator, `Operands must be two numbers or two strings.`)
     }
   } else if (typeof left === "string") {
     if (typeof right === "string" ) {
       return
     } else {
-      error(operator, `Operands must be two numbers or two strings.`)
-      throw new TypeError({ operator: operator, operand: right, expected: 'string' })
+      throw error(operator, `Operands must be two numbers or two strings.`)
     }
   }
 }
@@ -452,7 +434,7 @@ function Interpreter(mode = null) {
     if (distance != undefined) {
       return this.environment.lookupAt(distance, name.lexeme)
     } else {
-      return this.globals.lookup(name.lexeme)
+      return this.globals.lookup(name)
     }
   }
   this.visitVariable = function (v) {

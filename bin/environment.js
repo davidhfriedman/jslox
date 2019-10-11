@@ -1,13 +1,13 @@
+const { report, InterpreterError } = require('./errors')
+
+const error = function(token, message) {
+  report(token.line, token.lexeme, message)
+  return new InterpreterError(token, message)
+}
+
 function Environment (enclosing) {
   this.values = {}
   this.enclosing = enclosing || null
-}
-
-class UndefinedVariableError extends Error {
-  constructor(name) {
-    super(`Undefined variable '${name}'.`)
-    this.name = 'UndefinedVariableError'
-  }
 }
 
 Environment.prototype.define = function(name, value) {
@@ -16,7 +16,6 @@ Environment.prototype.define = function(name, value) {
 }
 
 Environment.prototype.assign = function(name, value) {
-  // TODO: semantic choice: undefined throws a run-time error
   if (this.values.hasOwnProperty(name.lexeme)) {
     this.values[name.lexeme] = value
     return
@@ -24,7 +23,7 @@ Environment.prototype.assign = function(name, value) {
   if (this.enclosing != null) {
     return this.enclosing.assign(name, value)
   }
-  throw new UndefinedVariableError(name.lexeme)
+  throw error(name, `Undefined variable '${name}'.`)
 }
 
 Environment.prototype.assignAt = function(distance, name, value) {
@@ -39,15 +38,19 @@ Environment.prototype.assignAt = function(distance, name, value) {
   environment.values[name.lexeme] = value
 }
 
-Environment.prototype.lookup = function(name) {
-  // TODO: semantic choice: undefined throws a run-time error
+Environment.prototype.lookup = function(token) {
+  // if token is a string, it can only be 'this' or 'super'
+  // but those can't cause an Undefined variable (unless there
+  // is an interpreter bug, in which case it doesn't matter
+  // that there won't be a line property for the error exception)
+  let name = (typeof token === 'string') ? token : token.lexeme
   if (this.values.hasOwnProperty(name)) {
     return this.values[name]
   }
   if (this.enclosing != null) {
     return this.enclosing.lookup(name)
   }
-  throw new UndefinedVariableError(name)
+  throw error(token, `Undefined variable '${name}'.`)
 }
 
 Environment.prototype.lookupAt = function(distance, name) {

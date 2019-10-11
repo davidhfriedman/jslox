@@ -1,5 +1,12 @@
 let errorOccurred = false
 
+class InterpreterError extends Error {
+  constructor(token, message) {
+    super(`${token.line}: '${token.lexeme}' ${message}`)
+    this.name = 'InterpreterError'
+  }
+}
+
 function report(line, where, text) {
   errorOccurred = true
   console.log(`[line ${line}] Error at '${where}': ${text}`)
@@ -14,4 +21,4 @@ function hadError(val = undefined) {
   }
 }
 
-module.exports = { report, hadError }
+module.exports = { report, hadError, InterpreterError }
