@@ -1,0 +1,8 @@
+class A {
+  say() {
+    super.say();
+    print "A.say()";
+  }
+}
+
+print A().say();

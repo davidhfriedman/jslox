@@ -41,6 +41,7 @@ function Resolver(interpreter) {
   this.scopes = new Stack()
   this.inFunction = false
   this.inClass = false
+  this.hasSuperClass = false
   this.inInitializer = false
   this.loopLevel = 0
   
@@ -133,6 +134,8 @@ function Resolver(interpreter) {
   this.visitClassDeclaration = function (c) {
     let prevInClass = this.inClass
     this.inClass = true
+    let prevHasSuperClass = this.hasSuperClass
+    this.hasSuperClass = false
     let name = c.name.lexeme
     this.declare(name)
     this.define(name)
@@ -143,6 +146,7 @@ function Resolver(interpreter) {
     }
     // Lox allows class declarations in blocks, so superclass name scope must be resolved
     if (c.superclass !== null) {
+      this.hasSuperClass = true
       this.resolve(c.superclass)
       this.beginScope();
       this.define('super')
@@ -160,6 +164,7 @@ function Resolver(interpreter) {
     if (c.superclass !== null) {
       this.endScope()
     }
+    this.hasSuperClass = prevHasSuperClass
     this.inClass = prevInClass
   }
 
@@ -233,6 +238,8 @@ function Resolver(interpreter) {
   this.visitSuperExpression = function (s) {
     if (this.inClass === false) {
       error(s.keyword, `Cannot use 'super' outside of a class.`)
+    } else if (this.hasSuperClass === false) {
+      error(s.keyword, `Cannot use 'super' in a class with no superclass.`)
     } else {
       this.resolveLocal(s, s.keyword)
     }
