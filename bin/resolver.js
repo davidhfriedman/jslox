@@ -106,7 +106,7 @@ function Resolver(interpreter) {
   this.visitVarDeclaration = function (v) {
     let name = v.name.lexeme
     this.declare(name)
-    if (v.val !== null) {
+    if (v.val !== undefined) {
       v.val.accept(this)
     }
     this.define(name)

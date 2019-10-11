@@ -179,15 +179,13 @@ Parser.prototype.classDeclaration = function () {
 }
 
 Parser.prototype.varDeclaration = function () {
-  let name, value
-  if (this.match(TokenType.IDENTIFIER)) {
-    name = this.previous()
-    if (this.match(TokenType.EQUAL)) {
-      value = this.expression()
-    }
-    this.consume(TokenType.SEMICOLON, "Expect ';' after variable declaration")
-    return new VarDeclaration(name, value)
+  let name = this.consume(TokenType.IDENTIFIER, "Expect variable name.")
+  let value
+  if (this.match(TokenType.EQUAL)) {
+    value = this.expression()
   }
+  this.consume(TokenType.SEMICOLON, "Expect ';' after variable declaration")
+  return new VarDeclaration(name, value)
 }
 
 Parser.prototype.whileStatement = function () {
