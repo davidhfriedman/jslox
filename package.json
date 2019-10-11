@@ -1,20 +1,17 @@
 {
   "name": "jslox",
-  "version": "0.0.1",
-  "description": "Bob Nystrom's Lox Language from Crafting Interpreters written in JavaScript",
+  "version": "1.0.0",
+  "description": "Tree-walk interpreter for Robert Nystrom's Lox Language from Crafting Interpreters written in JavaScript",
   "main": "bin/main.js",
   "bin": {
     "jslox": "./bin/main.js"
   },
   "scripts": {
-    "r": "node ./bin/main.js",
-    "d": "node ./bin/main.js -d",
-    "run": "node ./bin/main.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "r": "node ./bin/main.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/dhf-fullstack/jslox.git"
+    "url": "git+ssh://git@github.com/davidhfriedman/jslox.git"
   },
   "keywords": [
     "computer-language",
@@ -25,7 +22,7 @@
   "author": "David H. Friedman",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/dhf-fullstack/jslox/issues"
+    "url": "https://github.com/davidhfriedman/jslox/issues"
   },
-  "homepage": "https://github.com/dhf-fullstack/jslox#readme"
+  "homepage": "https://github.com/davidhfriedman/jslox#readme"
 }
